@@ -1,0 +1,7 @@
+.idea
+.DS_Store
+/backend/src/test
+frontend/node_modules
+frontend/.vscode/extensions.json
+backend/.mvn
+backend/.mvn/wrapper/maven-wrapper.properties
