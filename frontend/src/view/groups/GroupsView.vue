@@ -6,7 +6,7 @@
     </div>
     <div class="groups__view">
         <div class="group__">
-            <div :class="this.selectedGroup?.id === group.id ? ' group__expanded' : 'group__list'" v-for="group in this.groups" v-if="!this.loading" :key="group.id"
+            <div :class="this.selectedGroup?.id === group.id ? 'group__expanded' : 'group__list'" v-for="group in this.groups" v-if="!this.loading" :key="group.id"
                  :draggable="true" @dragstart="dragStart(group, $event)"
                  @dragend="dragEnd"
                  @dragover="dragOver"
@@ -18,10 +18,11 @@
                     <h3>{{ group.description }}</h3>
                     <i class="group__pin bx bx-pin"/>
                 </div>
-                <hr/>
+                <hr class="header__hr"/>
 
-                <div class="group__body" @click="this.toggleSelectGroup(group)">
-                    <MemberComponent :expanded="this.selectedGroup?.id === group.id" :group="group"/>
+                <div class="group__body" :draggable="true" >
+                    <component class="group__component" v-for="category in this.groupCategories" :key="category.name"
+                               :is="category.component" :group="group" :expanded="this.selectedGroup?.id === group.id"/>
                 </div>
                 <div class="group__footer">
                     <i class="group__move bx bx-move"/>
@@ -94,30 +95,15 @@ export default {
             dragged: undefined,
             groupCategories: [
                 {
-                    name: 'Chat',
-                    icon: 'bx bx-chat',
-                    component: ChatComponent
-                },
-                {
                     name: 'Member',
                     icon: 'bx bxs-user-detail',
                     component: MemberComponent
                 },
                 {
-                    name: 'Calendar',
-                    icon: 'bx bxs-calendar',
-                    component: 'CalendarComponent'
-                },
-                {
-                    name: 'Files',
-                    icon: 'bx bx-file-blank',
-                    component: 'FileComponent'
-                },
-                {
                     name: 'Settings',
-                    icon: 'bx bx-cog icon',
+                    icon: 'bx bxs-cog',
                     component: SettingsComponent
-                }
+                },
             ],
             groups: []
         }
@@ -260,7 +246,7 @@ export default {
     border-radius: 10px;
 }
 
-.groups__view hr {
+.groups__view .header__hr {
     margin: 0 20px;
     border: 1px solid var(--color-background-soft);
 }
@@ -329,7 +315,6 @@ export default {
 }
 
 .group__body {
-    cursor: pointer;
 }
 
 .group__expanded {
@@ -342,8 +327,14 @@ export default {
     transition: 0.5s;
 }
 
+.category__hr {
+    margin: 20px 20px;
+    border: 1px solid var(--color-background);
+}
 
-
+.group__component {
+    margin-top: 20px;
+}
 
 
 
