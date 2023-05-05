@@ -4,17 +4,9 @@
             <div class="navbar__logo">Logo</div>
         </div>
         <div class="navbar__center">
-            <router-link class="router-link" to="/">
-                <i class="bx bx-home"></i>
-                Home
-            </router-link>
-            <router-link class="router-link" to="/groups">
-                <i class="bx bx-chat"></i>
-                Groups
-            </router-link>
-            <router-link class="router-link" to="/settings">
-                <i class="bx bxs-user-detail"></i>
-                Contact
+            <router-link v-for="item in items" class="router-link" :to="item.route">
+                <i :class="item.icon"></i>
+                {{ item.name }}
             </router-link>
         </div>
         <div class="navbar__right">
@@ -24,9 +16,9 @@
             <div class="navbar__profile">
                 <img src="/default.png" alt="Avatar" @click="this.dropdownOpen = !this.dropdownOpen"/>
                 <div class="navbar__dropdown" v-if="dropdownOpen">
-                    <p class="navbar__dropdown__title">Welcome, {{this.getUser().username}}</p>
+                    <p class="navbar__dropdown__title">Welcome, {{ this.getUser().username }}</p>
                     <a @click="this.clickProfile()">My Profile</a>
-                    <a>Settings</a>
+                    <a @click="this.$router.push('/settings')">Settings</a>
                     <a @click="this.$auth.logout()">Logout</a>
                 </div>
             </div>
@@ -46,20 +38,18 @@ export default {
             items: [
                 {
                     name: 'Home',
-                    type: 'link',
+                    route: '/',
                     icon: 'bx bx-home',
-                    link: '/'
                 },
                 {
                     name: 'Groups',
-                    type: 'link',
+                    route: '/groups',
                     icon: 'bx bx-group',
-                    link: '/groups'
                 },
                 {
-                    name: 'Profile',
-                    type: 'img',
-                    img: '/default.png'
+                    name: 'Contacts',
+                    route: '/contacts',
+                    icon: 'bx bxs-user-detail',
                 }
             ]
         }
