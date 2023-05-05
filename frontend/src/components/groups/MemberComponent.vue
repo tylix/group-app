@@ -2,14 +2,39 @@
     <div class="expanded" v-if="this.expanded">
         Member list:
     </div>
-    <div v-else class="collapsed">
-        <h3 class="member__title">Member</h3>
+    <div class="collapsed" v-else>
+        <div class="member__header">
+            <h3 class="member__title">Member</h3>
+            <i @click="this.searchMember = !this.searchMember"
+               :class="'search__btn bx bx-' + (this.searchMember ? 'minus' : 'plus')"/>
+        </div>
+        <div :class="[searchMember ? 'search__member' : 'n__search__member']">
+            <div class="search__bar">
+                <i class="bx bx-search"/>
+                <input class="user__search" type="text" placeholder="Search member" @input="this.isTyping = true"
+                       v-model="this.searchQuery"/>
+            </div>
+
+            <div class="search__results">
+                <i v-if="this.isLoading" class="search__member__load bx bx-loader-alt bx-spin"/>
+
+                <div class="search__result" v-for="(result, index) in this.searchResult">
+                    <UsernameComponent :user="result" show-avatar/>
+                    <button class="invite__btn">Invite</button>
+                </div>
+                <p v-if="this.searchResult.length === 0 && !isLoading && this.searchQuery">No entry found.</p>
+            </div>
+            <hr class="search__hr"/>
+        </div>
         <div class="member__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin"/>
-            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" online-status/>
+            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false"
+                               online-status/>
         </div>
     </div>
-  <!--<div class="header">
+</template>
+
+<!--<div class="header">
       <h1>Member</h1>
       <button style="background-color: var(--color-background-mute); margin-left: 250px;  color: var(--color-text)">
           Requests
@@ -46,7 +71,6 @@
           </div>
       </div>
   </div>-->
-</template>
 
 <script>
 import _ from 'lodash';
@@ -131,7 +155,7 @@ export default {
 <style>
 .member__title {
     font-size: 17px;
-    padding: 10px 25px;
+    padding: 10px;
     color: var(--color-text-muted)
 }
 
@@ -143,6 +167,71 @@ export default {
     padding: 0 25px;
 }
 
+.user__search {
+
+}
+
+.member__header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 25px;
+}
+
+.search__bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 25px 25px 25px;
+    gap: 10px;
+}
+
+.search__results {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 0 25px 30px;
+    gap: 10px;
+}
+
+.search__result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.invite__btn {
+    margin-left: auto;
+    background-color: var(--color-blue-mute);
+}
+
+.search__hr {
+    margin: 0 25px 20px 25px;
+    border: 1px solid var(--color-background-soft);
+}
+
+.search__member {
+    opacity: 1;
+    max-height: 200px;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+}
+
+.n__search__member {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.search__member__load {
+    left: 50%;
+    position: absolute;
+}
+
+.search__btn {
+    cursor: pointer;
+}
 
 
 
@@ -191,11 +280,6 @@ export default {
     margin: 10px 4px;
 }
 
-.header i {
-    cursor: pointer;
-    font-size: 24px;
-}
-
 .invite-btn {
 //background-color: var(--color-green); border: none; border-radius: 5px; padding: 5px; color: var(--color-text);
 }
@@ -222,16 +306,6 @@ export default {
 .search-box i {
     font-size: 20px;
     padding-right: 5px;
-}
-
-.search-box input {
-    border: none;
-    background-color: var(--color-background);
-    font-size: 15px;
-    padding: 5px 10px;
-    outline: none;
-    color: var(--color-text);
-    width: 120%;
 }
 
 .member hr {
