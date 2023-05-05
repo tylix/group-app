@@ -7,6 +7,7 @@
   --vt-c-green: #3a8260;
   --vt-c-red: #e74c3c;
   --vt-c-blue: #3498db;
+  --vt-c-blue-mute: #3f608d;
   --vt-c-blue-soft: #161b22;
 
   --vt-c-black: #181818;
@@ -39,6 +40,7 @@
   --color-green: var(--vt-c-green);
   --color-red: var(--vt-c-red);
   --color-blue: var(--vt-c-blue);
+  --color-blue-mute: var(--vt-c-blue-mute);
   --color-blue-soft: var(--vt-c-blue-soft);
 
   --color-heading: var(--vt-c-text-light-1);
@@ -60,6 +62,7 @@
     --color-red: var(--vt-c-red);
     --color-blue: var(--vt-c-blue);
     --color-blue-soft: var(--vt-c-blue-soft);
+    --color-blue-mute: var(--vt-c-blue-mute);
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
