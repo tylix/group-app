@@ -1,5 +1,6 @@
 package com.maximilianwiegmann.backend.authentication;
 
+import com.maximilianwiegmann.backend.Request;
 import com.maximilianwiegmann.backend.account.AccountData;
 import com.maximilianwiegmann.backend.authentication.twofactor.TwoFactorService;
 import com.maximilianwiegmann.backend.payload.request.AuthenticationRequest;
@@ -12,13 +13,18 @@ import com.maximilianwiegmann.backend.security.token.Token;
 import com.maximilianwiegmann.backend.security.token.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +41,15 @@ public class AuthenticationService {
     private final Map<String, AuthenticationRequest> authenticationRequests = new HashMap<>();
     private final Map<String, AuthStatus> permitted = new HashMap<>();
 
+    @Value("${github.secret}")
+    private String gitHubSecret;
+
+    @Value("${github.clientId}")
+    private String gitHubClientId;
+
     public AuthenticationResponse register(RegisterRequest request) {
-        if (repository.findByUsername(request.getUsername()).isPresent() || repository.findByEmail(request.getEmail()).isPresent())
+        if (repository.findByUsername(request.getUsername()).isPresent()
+                || repository.findByEmail(request.getEmail()).isPresent())
             return null;
 
         var account = AccountData.builder()
@@ -58,9 +71,7 @@ public class AuthenticationService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
-                        request.getPassword()
-                )
-        );
+                        request.getPassword()));
         var account = repository.findByUsername(request.getUsername())
                 .orElseThrow();
 
@@ -87,34 +98,36 @@ public class AuthenticationService {
         return AuthenticationResponse.builder()
                 .token(token)
                 .build();
-        /*var jwtToken = account.getTfaSecret() == null ? jwtService.generateToken(account) : jwtService.generateTfaToken(account);
-        revokeAllUserTokens(account);
-        saveUserToken(account, jwtToken);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();*/
     }
 
     public ResponseEntity<?> otp(TwoFARequest request) {
         String token = request.getToken();
-        if (token == null) return ResponseEntity.badRequest().build();
+        if (token == null)
+            return ResponseEntity.badRequest().build();
 
         var authStatus = permitted.get(token);
-        if (authStatus == null) return ResponseEntity.badRequest().build();
+        if (authStatus == null)
+            return ResponseEntity.badRequest().build();
 
-        if (!authStatus.isOtp()) return ResponseEntity.badRequest().build();
-        if (!authStatus.getStatus().equals(AuthStatus.Status.WAIT)) return ResponseEntity.badRequest().build();
+        if (!authStatus.isOtp())
+            return ResponseEntity.badRequest().build();
+        if (!authStatus.getStatus().equals(AuthStatus.Status.WAIT))
+            return ResponseEntity.badRequest().build();
 
-        if (jwtService.isTokenExpired(token)) return ResponseEntity.badRequest().build();
-        if (!jwtService.isTfaToken(token)) return ResponseEntity.badRequest().build();
+        if (jwtService.isTokenExpired(token))
+            return ResponseEntity.badRequest().build();
+        if (!jwtService.isTfaToken(token))
+            return ResponseEntity.badRequest().build();
 
         var account = repository.findById(authStatus.getUId())
                 .orElseThrow();
 
         String otpSecret = account.getTfaSecret();
-        if (otpSecret == null) return ResponseEntity.badRequest().build();
+        if (otpSecret == null)
+            return ResponseEntity.badRequest().build();
         if (request.getCode().equals(twoFactorService.getTOTPCode(otpSecret))) {
-            if (!authenticationRequests.containsKey(authStatus.getUId())) return ResponseEntity.badRequest().build();
+            if (!authenticationRequests.containsKey(authStatus.getUId()))
+                return ResponseEntity.badRequest().build();
             permitted.get(request.getToken()).setStatus(AuthStatus.Status.OK);
             return ResponseEntity.ok("{\"status\": \"OK\"}");
         }
@@ -147,6 +160,48 @@ public class AuthenticationService {
         }
     }
 
+    public ResponseEntity<?> signInWith(String provider, String code) {
+        switch (provider) {
+            case "github" -> {
+                JSONObject body = new JSONObject();
+                body.put("client_id", this.gitHubClientId);
+                body.put("client_secret", this.gitHubSecret);
+                body.put("code", code);
+
+                try {
+                    JSONObject response = new JSONObject(
+                            Request.builder().url("https://github.com/login/oauth/access_token").body(body.toString())
+                                    .build().sendRequest());
+
+                    if (response.has("error"))
+                        return ResponseEntity.badRequest().build();
+
+                    String accessToken = response.getString("access_token");
+                    JSONObject user = new JSONObject(Request.builder()
+                            .url("https://api.github.com/user").headers(Map.of("Authorization", "token " + accessToken))
+                            .method(RequestMethod.GET)
+                            .build().sendRequest());
+
+                    String email = user.getString("email");
+                    String username = user.getString("login");
+                    int id = user.getInt("id");
+                    String avatarUrl = user.getString("avatar_url");
+
+                    var account = repository.findByEmail(email);
+
+                    System.out.println(user.toString());
+                    return ResponseEntity.ok(response.toString());
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+
+                break;
+            }
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
     private void saveUserToken(AccountData account, String jwtToken) {
         var token = Token.builder()
                 .userId(account.getId())
@@ -176,7 +231,8 @@ public class AuthenticationService {
 
     public void revokeAllUserTokens(AccountData account) {
         var validUserToken = tokenRepository.findAllValidTokensByUserId(account.getId());
-        if (validUserToken.isEmpty()) return;
+        if (validUserToken.isEmpty())
+            return;
         validUserToken.forEach(token -> {
             token.setExpired(true);
             token.setRevoked(true);
