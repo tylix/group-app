@@ -8,6 +8,8 @@ import com.maximilianwiegmann.backend.payload.request.RegisterRequest;
 import com.maximilianwiegmann.backend.payload.request.TwoFARequest;
 import com.maximilianwiegmann.backend.payload.response.AuthenticationResponse;
 import com.maximilianwiegmann.backend.account.AccountRepository;
+import com.maximilianwiegmann.backend.account.signinwith.SigninWith;
+import com.maximilianwiegmann.backend.account.signinwith.SigninWithRepository;
 import com.maximilianwiegmann.backend.security.config.JwtService;
 import com.maximilianwiegmann.backend.security.token.Token;
 import com.maximilianwiegmann.backend.security.token.TokenRepository;
@@ -27,13 +29,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
+
     private final AccountRepository repository;
     private final TokenRepository tokenRepository;
+    private final SigninWithRepository signinWithRepository;
+
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TwoFactorService twoFactorService;
@@ -187,16 +193,46 @@ public class AuthenticationService {
                     int id = user.getInt("id");
                     String avatarUrl = user.getString("avatar_url");
 
-                    var account = repository.findByEmail(email);
+                    String[] nameSplit = user.has("name") ? user.getString("name").split(" ") : new String[0];
+                    String lastName = nameSplit.length > 0 ? nameSplit[nameSplit.length - 1] : "";
+                    String firstName = user.has("name") ? user.getString("name").replace(lastName, "") : "";
 
-                    System.out.println(user.toString());
-                    return ResponseEntity.ok(response.toString());
+                    var signinWith = signinWithRepository.findByProviderAndProviderId(provider, String.valueOf(id));
+                    AccountData account = null;
+                    if (signinWith.isPresent()) {
+                        account = repository.findBySigninWithProviderId(signinWith.get().getId()).orElseThrow();
+                    } else {
+                        var newAccount = AccountData.builder()
+                                .username(username)
+                                .email(email)
+                                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                                .firstName(firstName)
+                                .lastName(lastName)
+                                .build();
+
+                                account = repository.save(newAccount);
+                                
+                        SigninWith signInWith = SigninWith.builder().provider(provider)
+                                .providerId(String.valueOf(id)).accountData(account)
+                                .build();
+                                
+                        signinWithRepository.save(signInWith);
+                        account.setSigninWith(signInWith);
+                        repository.save(account);
+                    }
+
+                    if (account == null)
+                        return ResponseEntity.badRequest().build();
+
+                    var jwtToken = jwtService.generateToken(account);
+                    revokeAllUserTokens(account);
+                    saveUserToken(account, jwtToken);
+                    return ResponseEntity.ok(AuthenticationResponse.builder()
+                            .token(jwtToken)
+                            .build());
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    return ResponseEntity.badRequest().build();
                 }
-
-                break;
             }
         }
         return ResponseEntity.badRequest().build();

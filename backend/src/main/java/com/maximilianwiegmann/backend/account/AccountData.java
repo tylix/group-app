@@ -1,7 +1,11 @@
 package com.maximilianwiegmann.backend.account;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.maximilianwiegmann.backend.account.signinwith.SigninWith;
 import com.maximilianwiegmann.backend.security.token.Token;
 import lombok.*;
+import lombok.Builder.Default;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -31,8 +35,15 @@ public class AccountData implements UserDetails {
 
     private String tfaSecret;
 
+    @Default
+    private boolean enabled = true;
+
     @DBRef(db = "tokens")
     private List<Token> tokens;
+    
+    @DBRef(db = "signinwith")
+    @JsonManagedReference
+    private SigninWith signinWith;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -56,6 +67,6 @@ public class AccountData implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return this.enabled;
     }
 }

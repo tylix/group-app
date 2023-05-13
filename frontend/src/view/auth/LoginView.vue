@@ -12,10 +12,19 @@
 
                 <p class="forgot-password" @click="this.$router.push('/forgot-password')">Forgot Password?</p>
             </div>
-            <button @click="this.login()">
-                <i class="spin bx bx-loader bx-spin" v-if="this.loading"/>
+            <button :disabled="this.loading" @click="this.login()">
+                <i class="spin bx bx-loader bx-spin" v-if="this.loading" />
                 <p v-else>Login</p>
             </button>
+
+            <div class="signin__with">
+                <p>Or sign in with</p>
+                <div class="signin__with__icons">
+                    <a class="bx bxl-apple"></a>
+                    <a :href="'https://github.com/login/oauth/authorize?scope=user:email&client_id=' + this.getGitHubClientId()" class="bx bxl-github" />
+                    <a class="bx bxl-discord"></a>
+                </div>
+            </div>
         </div>
         <div class="l-signup">
             <p>Don't have an account?</p>
@@ -48,6 +57,21 @@ export default {
                 this.loading = false
                 this.$toast.showNotification('Invalid username or password', 5000, 'error')
             });
+        },
+        getGitHubClientId() {
+            return import.meta.env.VITE_GITHUB_CLIENT_ID
+        }
+    },
+    mounted() {
+        const siw = this.$route.query.siw
+        const code = this.$route.query.code
+        if (siw && code) {
+            this.loading = true
+            this.$auth.signInWith(siw, code).then(() => {
+                this.$router.push('/')
+            }).catch(() => {
+                this.$toast.showNotification('Failed to sign in with ' + siw, 5000, 'error')
+            })
         }
     }
 }
@@ -71,7 +95,7 @@ export default {
     align-items: center;
     background-color: var(--color-blue-soft);
     width: 320px;
-    height: 240px;
+    height: 300px;
     padding-top: 25px;
     border-radius: 5px;
 }
@@ -164,5 +188,38 @@ export default {
     margin-top: 5px;
     font-size: 20px;
     color: var(--color-text);
+}
+
+.signin__with {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.signin__with p {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.signin__with__icons {
+    margin-top: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.signin__with__icons a {
+    font-size: 25px;
+    color: var(--color-text-muted);
+    margin-left: 5px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.signin__with__icons a:hover {
+    color: var(--color-text);
+    transition: 0.3s ease-in-out;
+    background-color: var(--color-blue-soft);
 }
 </style>

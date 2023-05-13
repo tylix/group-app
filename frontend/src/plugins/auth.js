@@ -16,6 +16,14 @@ export default {
                 }
                 return false
             },
+            signInWith: async (provider, code) => {
+                const response = await app.axios.post("/auth/signinwith?provider=" + provider + "&code=" + code)
+                if (response.data.token) {
+                    w.setToken(response)
+                    return true
+                }
+                return false
+            },
             signup: async (username, password, email) => {
                 const request = await app.axios.post("/auth/register", {
                     username,

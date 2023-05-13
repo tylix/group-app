@@ -19,7 +19,12 @@ export default defineComponent({
     updated() {
         this.sidebar = localStorage.getItem('token') !== null
     },
+    beforeUnmount() {
+        this.$websocket.disconnect()
+    },
     mounted() {
+        if(localStorage.getItem('token') !== null)
+            this.$websocket.connect()
 
         this.sidebar = localStorage.getItem('token') !== null
         if (localStorage.getItem('color') !== null) {
@@ -40,12 +45,6 @@ export default defineComponent({
 </script>
 
 <template>
-    <noscript>
-        <div class="noscript">
-            <h1>JavaScript is disabled</h1>
-            <p>JavaScript is disabled in your browser. Please enable JavaScript to use this website.</p>
-        </div>
-    </noscript>
     <i v-if="this.loading" class="spin bx bx-loader bx-spin"/>
     <router-view v-else/>
     <Navbar v-if="(this.$route.name !== 'Login' && this.$route.name !=='OTP' && this.$route.name !== 'Signup') && this.existUser() && !this.loading"/>
