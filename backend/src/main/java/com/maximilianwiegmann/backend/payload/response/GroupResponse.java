@@ -1,6 +1,7 @@
 package com.maximilianwiegmann.backend.payload.response;
 
 import com.maximilianwiegmann.backend.chat.ChatMessage;
+import com.maximilianwiegmann.backend.group.data.GroupInvite;
 import com.maximilianwiegmann.backend.group.data.GroupMember;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +22,7 @@ public class GroupResponse {
     private String icon;
     private long created;
     private List<GroupMember> member;
-    private List<GroupMember> invited;
+    private List<GroupInvite> invited;
     private List<GroupMember> requests;
     private List<ChatMessage> messages;
     private Map<String, Object> settingMap;

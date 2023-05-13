@@ -26,7 +26,7 @@ public class GroupData {
     private String icon;
     private Map<String, Object> settingMap;
     private List<GroupMember> member;
-    private List<GroupMember> invited;
+    private List<GroupInvite> invited;
     private List<GroupMember> requests;
     private List<ChatMessage> messages;
 

@@ -1,8 +1,12 @@
 package com.maximilianwiegmann.backend.group;
 
+import com.maximilianwiegmann.backend.BackendApplication;
 import com.maximilianwiegmann.backend.group.data.GroupData;
+import com.maximilianwiegmann.backend.group.data.GroupInvite;
 import com.maximilianwiegmann.backend.group.data.GroupMember;
 import com.maximilianwiegmann.backend.payload.response.GroupResponse;
+import com.mongodb.lang.Nullable;
+
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.springframework.stereotype.Service;
@@ -68,18 +72,18 @@ public class GroupService {
                 .append("name", data.getName())
                 .append("description", data.getDescription())
                 .append("icon", data.getIcon())
-                .append("member", data.getMember().size())
-        ).toList();
+                .append("member", data.getMember().size())).toList();
     }
 
     public GroupResponse joinGroup(String gid, String uid) {
         GroupData group = groupRepository.findById(gid).orElse(null);
         if (group == null)
             return null;
-        if (group.getInvited().stream().noneMatch(invited -> invited.getId().equals(uid)) || group.getMember().stream().anyMatch(member -> member.getId().equals(uid)))
+        if (group.getInvited().stream().noneMatch(invited -> invited.getReceiver().equals(uid))
+                || group.getMember().stream().anyMatch(member -> member.getId().equals(uid)))
             return null;
         group.getMember().add(new GroupMember(uid, System.currentTimeMillis(), GroupMember.ROLE_MEMBER));
-        group.getInvited().removeIf(invited -> invited.getId().equals(uid));
+        group.getInvited().removeIf(invited -> invited.getReceiver().equals(uid));
         group.getRequests().removeIf(request -> request.getId().equals(uid));
         return groupRepository.save(group).toResponse();
     }
@@ -95,13 +99,29 @@ public class GroupService {
         return true;
     }
 
+    public boolean createInviteLink(String gId, long expire, @Nullable String reciever) {
+        GroupData groupData = getGroup(gId);
+        if (groupData == null)
+            return false;
+        if (groupData.getInvited().stream().anyMatch(invite -> invite.getReceiver().equals(reciever) && !invite.isExpired()))
+            return false;
+
+        String token = BackendApplication.generateString(20);
+
+        GroupInvite invite = GroupInvite.builder().token(token).expire(expire).receiver(reciever).build();
+        groupData.getInvited().add(invite);
+        groupRepository.save(groupData);
+        return true;
+    }
+
     public boolean inviteUser(String gid, String uid) {
         GroupData group = groupRepository.findById(gid).orElse(null);
         if (group == null)
             return false;
         if (group.getMember().stream().noneMatch(member -> member.getId().equals(uid)))
             return false;
-        group.getInvited().add(new GroupMember(uid, System.currentTimeMillis(), GroupMember.ROLE_MEMBER));
+        // group.getInvited().add(new GroupMember(uid, System.currentTimeMillis(),
+        // GroupMember.ROLE_MEMBER));
         return true;
     }
 

@@ -6,6 +6,7 @@ import auth from "@/plugins/auth.js";
 import users from "@/plugins/users";
 import groups from "@/plugins/groups";
 import toast from "@/plugins/toast";
+import websocket from "@/plugins/websocket";
 
 import axios from 'axios'
 import VueAxios from 'vue-axios'
@@ -33,6 +34,7 @@ app.use(auth)
 app.use(users)
 app.use(groups)
 app.use(toast)
+app.use(websocket)
 app.use(VueCryptojs)
 
 router.isReady().then(() => {
