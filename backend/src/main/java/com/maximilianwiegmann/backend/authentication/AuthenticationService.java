@@ -16,6 +16,7 @@ import com.maximilianwiegmann.backend.security.token.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -52,6 +54,12 @@ public class AuthenticationService {
 
     @Value("${github.clientId}")
     private String gitHubClientId;
+
+    @Value("${discord.clientId}")
+    private String discordClientId;
+
+    @Value("${discord.secret}")
+    private String discordSecret;
 
     public AuthenticationResponse register(RegisterRequest request) {
         if (repository.findByUsername(request.getUsername()).isPresent()
@@ -210,12 +218,12 @@ public class AuthenticationService {
                                 .lastName(lastName)
                                 .build();
 
-                                account = repository.save(newAccount);
-                                
+                        account = repository.save(newAccount);
+
                         SigninWith signInWith = SigninWith.builder().provider(provider)
                                 .providerId(String.valueOf(id)).accountData(account)
                                 .build();
-                                
+
                         signinWithRepository.save(signInWith);
                         account.setSigninWith(signInWith);
                         repository.save(account);
@@ -231,6 +239,90 @@ public class AuthenticationService {
                             .token(jwtToken)
                             .build());
                 } catch (IOException e) {
+                    return ResponseEntity.badRequest().build();
+                }
+            }
+            case "discord" -> {
+                JSONObject body = new JSONObject();
+                body.put("client_id", this.discordClientId);
+                body.put("client_secret", this.discordSecret);
+                body.put("grant_type", "authorization_code");
+                body.put("code", code);
+                body.put("redirect_uri", "https://maximilianwiegmann.com/login?siw=discord");
+
+                try {
+
+                    StringBuilder formattedBody = new StringBuilder();
+                    int i = 0;
+                    for (String key : body.keySet()) {
+                        formattedBody.append(key).append("=")
+                                .append(URLEncoder.encode(String.valueOf(body.get(key)), "UTF-8"));
+                        if (i != body.keySet().size() - 1)
+                            formattedBody.append("&");
+                        i++;
+                    }
+                    
+                    JSONObject response = new JSONObject(
+                            Request.builder().url("https://discord.com/api/v10/oauth2/token")
+                                    .contentType("application/x-www-form-urlencoded").body(formattedBody.toString())
+                                    .build().sendRequest());
+
+                    if (response.has("error"))
+                        return ResponseEntity.badRequest().build();
+
+                    String accessToken = response.getString("access_token");
+                    JSONObject user = new JSONObject(Request.builder()
+                            .url("https://discord.com/api/users/@me")
+                            .headers(Map.of("Authorization", "Bearer " + accessToken))
+                            .method(RequestMethod.GET)
+                            .build().sendRequest());
+
+                    String email = user.getString("email");
+                    String username = user.getString("username");
+                    String id = user.getString("id");
+                    String avatarUrl = user.getString("avatar");
+
+                    var signinWith = signinWithRepository.findByProviderAndProviderId(provider, id);
+                    AccountData account = null;
+                    if (signinWith.isPresent()) {
+                        account = repository.findBySigninWithProviderId(signinWith.get().getId()).orElseThrow();
+                    } else {
+                        var newAccount = AccountData.builder()
+                                .username(username)
+                                .email(email)
+                                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                                .build();
+
+                        account = repository.save(newAccount);
+
+                        SigninWith signInWith = SigninWith.builder().provider(provider)
+                                .providerId(id).accountData(account)
+                                .build();
+
+                        signinWithRepository.save(signInWith);
+                        account.setSigninWith(signInWith);
+                        repository.save(account);
+                    }
+
+                    if (account == null)
+                        return ResponseEntity.badRequest().build();
+
+                    var jwtToken = jwtService.generateToken(account);
+                    revokeAllUserTokens(account);
+                    saveUserToken(account, jwtToken);
+                    return ResponseEntity.ok(AuthenticationResponse.builder()
+                            .token(jwtToken)
+                            .build());
+
+                    /*JSONArray connections = new JSONArray(Request.builder()
+                            .url("https://discord.com/api/users/@me/connections")
+                            .headers(Map.of("Authorization", "Bearer " + accessToken))
+                            .method(RequestMethod.GET)
+                            .build().sendRequest());
+
+                    System.out.println(connections.get(0).toString());*/
+                } catch (IOException e) {
+                    e.printStackTrace();
                     return ResponseEntity.badRequest().build();
                 }
             }

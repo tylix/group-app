@@ -20,16 +20,24 @@ public class Request {
     private String url;
     private String body;
     private Map<String, String> headers;
+
     @Default
     private RequestMethod method = RequestMethod.POST;
+
+    @Default
+    private String contentType = "application/json";
+
+    @Default
+    private String accept = "application/json";
+
 
     public String sendRequest() throws IOException {
         URL url = new URL(this.url);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(this.method.name());
         connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setRequestProperty("Accept", "application/json");
+        connection.setRequestProperty("Content-Type", this.contentType);
+        connection.setRequestProperty("Accept", this.accept);
 
         if (headers != null)
             headers.forEach(connection::setRequestProperty);
@@ -56,6 +64,7 @@ public class Request {
     public enum RequestType {
         POST,
         GET,
-        PUT
+        PUT,
+        DELETE
     }
 }

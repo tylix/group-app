@@ -49,8 +49,9 @@ public class AuthenticationController {
         return ResponseEntity.ok().build();
     }
 
-    @RequestMapping("/signinwith")
+    @PostMapping("/signinwith")
     public ResponseEntity<?> signInWith(@RequestParam String provider, @RequestParam String code) {
         return service.signInWith(provider, code);
     }
+
 }

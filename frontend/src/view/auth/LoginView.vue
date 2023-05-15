@@ -21,8 +21,8 @@
                 <p>Or sign in with</p>
                 <div class="signin__with__icons">
                     <a class="bx bxl-apple"></a>
-                    <a :href="'https://github.com/login/oauth/authorize?scope=user:email&client_id=' + this.getGitHubClientId()" class="bx bxl-github" />
-                    <a class="bx bxl-discord"></a>
+                    <a :href="this.getGitHubLink()" class="bx bxl-github" />
+                    <a :href="this.getDiscordLink()" class="bx bxl-discord"></a>
                 </div>
             </div>
         </div>
@@ -58,8 +58,11 @@ export default {
                 this.$toast.showNotification('Invalid username or password', 5000, 'error')
             });
         },
-        getGitHubClientId() {
-            return import.meta.env.VITE_GITHUB_CLIENT_ID
+        getGitHubLink() {
+            return import.meta.env.VITE_GITHUB_LINK
+        },
+        getDiscordLink() {
+            return import.meta.env.VITE_DISCORD_LINK
         }
     },
     mounted() {
