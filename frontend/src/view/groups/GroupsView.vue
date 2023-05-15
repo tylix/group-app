@@ -1,38 +1,51 @@
 <template>
     <div class="group__search">
         <div class="search__bar">
-            <input type="text" v-model="this.search" placeholder="Search..."/>
+            <input type="text" v-model="this.search" placeholder="Search..." />
         </div>
     </div>
     <div class="groups__view">
         <div class="group__">
-            <div :class="this.selectedGroup?.id === group.id ? 'group__expanded' : 'group__list'" v-for="group in this.groups" v-if="!this.loading" :key="group.id"
-                 :draggable="true" @dragstart="dragStart(group, $event)"
-                 @dragend="dragEnd"
-                 @dragover="dragOver"
-                 @drop="drop(group)">
+            <div :class="this.selectedGroup?.id === group.id ? 'group__expanded' : 'group__list'"
+                v-for="group in this.groups" v-if="!this.loading" :key="group.id" :draggable="true"
+                @dragstart="dragStart(group, $event)" @dragend="dragEnd" @dragover="dragOver" @drop="drop(group)">
                 <div class="group__header">
                     <img class="group__icon" v-if="group.icon">
-                    <i v-else class="group__icon bx bx-group"/>
-                    <h2>{{ group.name }}</h2>
-                    <h3>{{ group.description }}</h3>
-                    <i class="group__pin bx bx-pin"/>
+                    <i v-else class="group__icon bx bx-group" />
+                    <div class="group__title" @click="this.toggleSelectGroup(group)">
+                        <h2>{{ group.name }}</h2>
+                        <h5>{{ group.description }}</h5>
+                    </div>
+                    <div class="expanded__categories" v-if="this.selectedGroup?.id === group.id">
+                        <p class="expanded__category" v-for="category in this.groupCategories"
+                            @click="this.selectedCategory = category">
+                            {{ category.name }}
+                        </p>
+                    </div>
+                    <i class="group__pin bx bx-pin" />
                 </div>
-                <hr class="header__hr"/>
+                <hr class="header__hr" />
 
-                <div class="group__body" :draggable="true" >
-                    <component class="group__component" v-for="category in this.groupCategories" :key="category.name"
-                               :is="category.component" :group="group" :expanded="this.selectedGroup?.id === group.id"/>
+                <div class="group__body" :draggable="true">
+                    <div v-for="(category, index) in this.groupCategories" :key="index">
+                        <div
+                            v-if="this.selectedCategory === undefined ? true : this.selectedGroup?.id === group.id ? this.selectedCategory?.name === category?.name : true">
+
+                            <component class="group__component" :is="category.component" :group="group"
+                                :expanded="this.selectedGroup?.id === group.id" />
+                            <hr class="body__hr" v-if="index !== this.groupCategories.length - 1" />
+                        </div>
+                    </div>
                 </div>
                 <div class="group__footer">
-                    <i class="group__move bx bx-move"/>
+                    <i class="group__move bx bx-move" />
                 </div>
             </div>
-            <i v-if="this.loading" class="group__loading bx bx-loader-alt bx-spin"/>
-            <i class="group__add bx bx-plus" @click="this.toggleCreateGroup" v-else/>
+            <i v-if="this.loading" class="group__loading bx bx-loader-alt bx-spin" />
+            <i class="group__add bx bx-plus" @click="this.toggleCreateGroup" v-else />
         </div>
     </div>
-  <!--<div class="groups">
+    <!--<div class="groups">
       <div class="search-section">
           <div class="search-bar">
               <i class="bx bx-search"/>
@@ -73,7 +86,7 @@
   </div>
 
   <CreateGroupComponent v-if="this.createGroup && !this.selectedGroup" @close="this.update"/>-->
-    <CreateGroupComponent v-if="this.createGroup && !this.selectedGroup" @close="this.update"/>
+    <CreateGroupComponent v-if="this.createGroup && !this.selectedGroup" @close="this.update" />
 </template>
 
 <script>
@@ -84,7 +97,7 @@ import SettingsComponent from "@/components/groups/SettingsComponent.vue";
 
 export default {
     name: "GroupsView",
-    components: {MemberComponent, CreateGroupComponent},
+    components: { MemberComponent, CreateGroupComponent },
     data() {
         return {
             selectedGroup: undefined,
@@ -103,6 +116,11 @@ export default {
                     name: 'Settings',
                     icon: 'bx bxs-cog',
                     component: SettingsComponent
+                },
+                {
+                    name: 'Chat',
+                    icon: 'bx bxs-cog',
+                    component: ChatComponent
                 },
             ],
             groups: []
@@ -154,8 +172,7 @@ export default {
             })
         },
         toggleSelectGroup(group) {
-            console.log(group)
-            this.selectedCategory = undefined
+            this.selectedCategory = this.groupCategories[0]
             this.selectedGroup === group ? this.selectedGroup = undefined : this.selectedGroup = group
             this.createGroup = false
         },
@@ -187,7 +204,6 @@ export default {
 </script>
 
 <style>
-
 .group__search {
     position: fixed;
     top: 9%;
@@ -210,7 +226,7 @@ export default {
     position: absolute;
     height: 100%;
     display: flex;
-//border: 1px solid red;
+    /*border: 1px solid red;*/
 }
 
 .groups__view {
@@ -220,7 +236,7 @@ export default {
     height: 80%;
     width: 90%;
     border-radius: 10px;
-//border: 1px solid red; display: flex; flex-direction: row;
+    /*border: 1px solid red; display: flex; flex-direction: row;*/
     -webkit-user-select: none;
     gap: 10px;
     overflow-x: scroll;
@@ -230,6 +246,7 @@ export default {
 .groups__view::-webkit-scrollbar {
     height: 4px;
     border-radius: 50px;
+    display: none;
 }
 
 .groups__view::-webkit-scrollbar-track {
@@ -259,6 +276,7 @@ export default {
     border: 1px solid var(--color-background-mute);
     border-radius: 10px;
     transition: all 0.4s ease-in-out;
+    overflow: scroll;
 }
 
 .group__header {
@@ -314,8 +332,7 @@ export default {
     font-size: 25px;
 }
 
-.group__body {
-}
+.group__body {}
 
 .group__expanded {
     margin-top: 20px;
@@ -334,6 +351,31 @@ export default {
 
 .group__component {
     margin-top: 20px;
+}
+
+.body__hr {
+    margin: 20px 20px;
+    border: 1px solid var(--color-background);
+}
+
+.expanded__categories {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin: 20px;
+    left: 10%;
+}
+
+.expanded__category {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.group__title {
+    cursor: pointer;
 }
 
 
@@ -467,5 +509,4 @@ export default {
     font-size: 24px;
     margin-right: 30px;
 }
-
 </style>

@@ -4,6 +4,7 @@ import com.maximilianwiegmann.backend.account.AccountData;
 import com.maximilianwiegmann.backend.account.AccountRepository;
 import com.maximilianwiegmann.backend.chat.ChatMessage;
 import com.maximilianwiegmann.backend.group.data.GroupData;
+import com.maximilianwiegmann.backend.group.data.GroupInvite;
 import com.maximilianwiegmann.backend.group.data.GroupMember;
 import com.maximilianwiegmann.backend.payload.response.GroupResponse;
 import lombok.RequiredArgsConstructor;
@@ -103,5 +104,10 @@ public class GroupController {
         return ResponseEntity.ok(groupService.deleteChat(gId));
     }
 
+    @PostMapping("/invite/{gId}")
+    public ResponseEntity<?> createInvite(@PathVariable String gId, @RequestBody GroupInvite invite) {
+
+        return ResponseEntity.ok().build();
+    }
 
 }

@@ -6,30 +6,43 @@
         <div class="member__header">
             <h3 class="member__title">Member</h3>
             <i @click="this.searchMember = !this.searchMember"
-               :class="'search__btn bx bx-' + (this.searchMember ? 'minus' : 'plus')"/>
+                :class="'search__btn bx bx-' + (this.searchMember ? 'minus' : 'plus')" />
         </div>
         <div :class="[searchMember ? 'search__member' : 'n__search__member']">
             <div class="search__bar">
-                <i class="bx bx-search"/>
+                <i class="bx bx-search" />
                 <input class="user__search" type="text" placeholder="Search member" @input="this.isTyping = true"
-                       v-model="this.searchQuery"/>
+                    v-model="this.searchQuery" />
             </div>
 
             <div class="search__results">
-                <i v-if="this.isLoading" class="search__member__load bx bx-loader-alt bx-spin"/>
+                <i v-if="this.isLoading" class="search__member__load bx bx-loader-alt bx-spin" />
 
                 <div class="search__result" v-for="(result, index) in this.searchResult">
-                    <UsernameComponent :user="result" show-avatar/>
-                    <button class="invite__btn">Invite</button>
+                    <UsernameComponent :user="result" show-avatar />
+                    <button class="invite__btn" @click="this.inviteRevokeMember(result)">Invite</button>
                 </div>
                 <p v-if="this.searchResult.length === 0 && !isLoading && this.searchQuery">No entry found.</p>
             </div>
-            <hr class="search__hr"/>
+            <div class="group__invite" @click="this.setupInviteLink = !this.setupInviteLink">
+                <i class="bx bx-link" />
+                <p>Create invite link</p>
+            </div>
+            <div :class="[setupInviteLink ? 'invite__link' : 'n__invite__link']">
+                <div class="invite__link__expire">
+                    <p>Expire after</p>
+                    
+                </div>
+                <div class="invite__link__uses">
+                    <p>Max uses</p>
+                </div>
+                <button class="invite__link__btn">Generate</button>
+            </div>
         </div>
+        <hr class="search__hr" />
         <div class="member__list">
-            <i v-if="this.loading" class="bx bx-loader-alt bx-spin"/>
-            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false"
-                               online-status/>
+            <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
+            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" online-status />
         </div>
     </div>
 </template>
@@ -78,7 +91,7 @@ import UsernameComponent from "@/components/UsernameComponent.vue";
 
 export default {
     name: "MemberComponent",
-    components: {UsernameComponent},
+    components: { UsernameComponent },
     props: {
         group: {
             type: Object,
@@ -98,7 +111,8 @@ export default {
             isTyping: false,
             isLoading: false,
             searchResult: [],
-            loading: false
+            loading: false,
+            setupInviteLink: false
         }
     },
     mounted() {
@@ -133,7 +147,7 @@ export default {
             if (this.$groups.isInvited(group, member))
                 group.invited = group.invited.filter(invited => invited.id !== member.uid);
             else
-                group.invited.push({id: member.uid, timestamp: Date.now(), role: 0});
+                group.invited.push({ id: member.uid, timestamp: Date.now(), role: 0 });
             this.$groups.updateGroup(group).then(() => {
                 this.searchMember = false
             })
@@ -167,9 +181,7 @@ export default {
     padding: 0 25px;
 }
 
-.user__search {
-
-}
+.user__search {}
 
 .member__header {
     display: flex;
@@ -193,12 +205,14 @@ export default {
     justify-content: flex-start;
     padding: 0 25px 30px;
     gap: 10px;
+    overflow: scroll
 }
 
 .search__result {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    overflow: scroll
 }
 
 .invite__btn {
@@ -216,9 +230,23 @@ export default {
     max-height: 200px;
     overflow: hidden;
     transition: max-height 0.5s ease;
+    overflow-y: scroll;
 }
 
 .n__search__member {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.invite__link {
+    opacity: 1;
+    max-height: 200px;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+}
+
+.n__invite__link {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;
@@ -233,6 +261,36 @@ export default {
     cursor: pointer;
 }
 
+.group__invite {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    text-align: right;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 25px;
+    color: var(--color-blue-mute);
+    cursor: pointer;
+}
+
+.invite__link {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    text-align: left;
+    gap: 10px;
+    padding: 10px 25px;
+}
+
+.invite__link__expire {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.invite__link__uses {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
 
 
 
@@ -281,7 +339,7 @@ export default {
 }
 
 .invite-btn {
-//background-color: var(--color-green); border: none; border-radius: 5px; padding: 5px; color: var(--color-text);
+    /*background-color: var(--color-green); border: none; border-radius: 5px; padding: 5px; color: var(--color-text);*/
 }
 
 .search-results {

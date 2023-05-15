@@ -83,6 +83,5 @@ This project is licensed under the [MIT License](LICENSE).
 If you have any questions or inquiries, feel free to reach out to the project maintainer:
 
 - Email: kontakt@maximilianwiegmann.com
-- GitHub: [@tylix](https://github.com/tylix)
 
 Happy chatting!

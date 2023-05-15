@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.Builder.Default;
 
 @Data
 @Builder
@@ -17,10 +18,14 @@ import lombok.Setter;
 @Setter
 public class GroupInvite {
     private String token;
-    private final long timestamp = System.currentTimeMillis();
+    @Default
+    private long timestamp = System.currentTimeMillis();
     private long expire;
     @Nullable
     private String receiver;
+
+    private int used;
+    private int maxUses;
 
     public boolean isExpired() {
         return System.currentTimeMillis() > expire;

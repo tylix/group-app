@@ -1,5 +1,13 @@
 <template>
-    <div class="header">
+    <div class="expanded" v-if="this.expanded">
+        Big Settings
+    </div>
+    <div class="collapsed" v-else>
+        <div class="settings__header">
+            <h3 class="settings__title">Settings</h3>
+        </div>
+    </div>
+    <!--<div class="header">
         <h1>Settings</h1>
 
         <button v-if="JSON.stringify(this.group) !== JSON.stringify(this.updatedGroup)" @click="this.saveGroup">Save
@@ -35,7 +43,7 @@
             </div>
 
         </div>
-    </div>
+    </div>-->
 </template>
 
 <script>
@@ -44,6 +52,10 @@ export default {
     props: {
         group: {
             type: Object,
+            required: true
+        },
+        expanded: {
+            type: Boolean,
             required: true
         }
     },
@@ -180,6 +192,22 @@ export default {
 </script>
 
 <style>
+
+.settings__header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+}
+
+.settings__title {
+    font-size: 17px;
+    padding: 0 10px;
+    color: var(--color-text-muted)
+}
+
+
 
 .header button {
     background-color: var(--color-green);
