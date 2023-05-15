@@ -64,6 +64,21 @@ export default {
                 const index = group.member.findIndex(m => m.id === uId) + 1
                 console.log(uId, index)
                 return w.getColor(index)
+            },
+
+            createInvite: async (gId, expire, maxUses, receiver) => {
+                const response = await app.axios.post("/groups/invite/" + gId, {
+                    expire: expire,
+                    receiver: receiver,
+                    maxUses: maxUses
+                })
+
+                return response
+            },
+
+            getGroupByInviteLink: async (link) => {
+                const response = await app.axios.get("/groups/invite/" + link)
+                return response.data
             }
         }
 

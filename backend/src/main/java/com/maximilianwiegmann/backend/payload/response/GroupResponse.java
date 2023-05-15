@@ -26,4 +26,12 @@ public class GroupResponse {
     private List<GroupMember> requests;
     private List<ChatMessage> messages;
     private Map<String, Object> settingMap;
+
+    public GroupResponse toPublicResponse() {
+        GroupResponse response = this;
+        response.setMessages(null);
+        response.setRequests(null);
+        response.setInvited(null);
+        return response;
+    }
 }

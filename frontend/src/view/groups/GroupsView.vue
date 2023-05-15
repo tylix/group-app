@@ -18,7 +18,10 @@
                     </div>
                     <div class="expanded__categories" v-if="this.selectedGroup?.id === group.id">
                         <p class="expanded__category" v-for="category in this.groupCategories"
-                            @click="this.selectedCategory = category">
+                            @click="this.selectedCategory = category" :style="{
+                                color: this.selectedCategory === category ? 'var(--color-text)' : 'var(--color-text-light)',
+                            }">
+                            <i :class="category.icon" />
                             {{ category.name }}
                         </p>
                     </div>
@@ -133,6 +136,12 @@ export default {
         }
     },*/
     mounted() {
+        const invlink = this.$route.query.invlink
+        if (invlink) {
+            this.$groups.getGroupByInviteLink(invlink).then(group => {
+                console.log(group)
+            })
+        }
         this.loadGroups()
         /*if(this.id) {
             this.$groups.getGroupById(this.id).then(group => {
@@ -360,23 +369,30 @@ export default {
 
 .expanded__categories {
     display: flex;
-    flex-direction: row;
-    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
     margin: 20px;
-    left: 10%;
+    gap: 30px;
+    left: 10cm;
 }
 
 .expanded__category {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
+    align-items: center;
     cursor: pointer;
+    font-size: 18px;
+    gap: 5px;
 }
 
 .group__title {
     cursor: pointer;
 }
+
+
+
+
+
+
 
 
 

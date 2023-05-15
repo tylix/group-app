@@ -17,4 +17,5 @@ public class Notification {
     private String title;
     private String body;
     private long timestamp;
+    private String link;
 }

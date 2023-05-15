@@ -4,11 +4,15 @@ import com.maximilianwiegmann.backend.BackendApplication;
 import com.maximilianwiegmann.backend.group.data.GroupData;
 import com.maximilianwiegmann.backend.group.data.GroupInvite;
 import com.maximilianwiegmann.backend.group.data.GroupMember;
+import com.maximilianwiegmann.backend.notifications.Notification;
+import com.maximilianwiegmann.backend.notifications.NotificationService;
 import com.maximilianwiegmann.backend.payload.response.GroupResponse;
 import com.mongodb.lang.Nullable;
 
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
+import org.json.JSONObject;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -20,6 +24,8 @@ import java.util.Map;
 public class GroupService {
 
     private final GroupRepository groupRepository;
+
+    private final NotificationService notificationService;
 
     public GroupData getGroup(String id) {
         return groupRepository.findById(id).orElse(null);
@@ -99,30 +105,38 @@ public class GroupService {
         return true;
     }
 
-    public boolean createInviteLink(String gId, long expire, @Nullable String reciever) {
+    public ResponseEntity<?> createInviteLink(String gId, long expire, @Nullable String reciever, int maxUses) {
         GroupData groupData = getGroup(gId);
         if (groupData == null)
-            return false;
-        if (groupData.getInvited().stream().anyMatch(invite -> invite.getReceiver().equals(reciever) && !invite.isExpired()))
-            return false;
+            return ResponseEntity.badRequest().build();
+        if (groupData.getInvited().stream()
+                .anyMatch(invite -> invite.getReceiver() != null && invite.getReceiver().equals(reciever)
+                        && !invite.isExpired()))
+            return ResponseEntity.badRequest().build();
 
         String token = BackendApplication.generateString(20);
 
-        GroupInvite invite = GroupInvite.builder().token(token).expire(expire).receiver(reciever).build();
+        GroupInvite invite = GroupInvite.builder().token(token).expire(expire == 0 ? -1 : expire).maxUses(maxUses)
+                .receiver(reciever)
+                .build();
         groupData.getInvited().add(invite);
         groupRepository.save(groupData);
-        return true;
+
+        if (reciever != null) {
+            notificationService.sendNotification(reciever,
+                    Notification.builder()
+                            .title("Group Invite")
+                            .body("You have been invited to " + groupData.getName())
+                            .link("https://maximilianwiegmann.com/groups?invlink=" + token)
+                            .build());
+        }
+
+        return ResponseEntity.ok(invite);
     }
 
-    public boolean inviteUser(String gid, String uid) {
-        GroupData group = groupRepository.findById(gid).orElse(null);
-        if (group == null)
-            return false;
-        if (group.getMember().stream().noneMatch(member -> member.getId().equals(uid)))
-            return false;
-        // group.getInvited().add(new GroupMember(uid, System.currentTimeMillis(),
-        // GroupMember.ROLE_MEMBER));
-        return true;
+    public GroupData getGroupByInviteToken(String token) {
+        return groupRepository.findAll().stream().filter(groupData -> groupData.getInvited().stream()
+                .anyMatch(invite -> invite.getToken().equals(token) && !invite.isExpired())).findFirst().orElse(null);
     }
 
     public boolean deleteChat(String gId) {

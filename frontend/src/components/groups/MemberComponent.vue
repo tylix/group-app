@@ -1,6 +1,9 @@
 <template>
     <div class="expanded" v-if="this.expanded">
-        Member list:
+        <div class="emember__list">
+            <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
+            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" online-status/>
+        </div>
     </div>
     <div class="collapsed" v-else>
         <div class="member__header">
@@ -20,23 +23,31 @@
 
                 <div class="search__result" v-for="(result, index) in this.searchResult">
                     <UsernameComponent :user="result" show-avatar />
-                    <button class="invite__btn" @click="this.inviteRevokeMember(result)">Invite</button>
+                    <button class="invite__btn" @click="this.createInviteLink(result)">Invite</button>
                 </div>
                 <p v-if="this.searchResult.length === 0 && !isLoading && this.searchQuery">No entry found.</p>
             </div>
-            <div class="group__invite" @click="this.setupInviteLink = !this.setupInviteLink">
+            <div v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0" class="group__invite"
+                @click="this.setupInviteLink = !this.setupInviteLink">
                 <i class="bx bx-link" />
                 <p>Create invite link</p>
             </div>
             <div :class="[setupInviteLink ? 'invite__link' : 'n__invite__link']">
                 <div class="invite__link__expire">
                     <p>Expire after</p>
-                    
+                    <select class="invite__dropdown" id="expire-after-select" v-model="this.expireAfter">
+                        <option v-for="expire in this.expireItems" :value="expire.value">{{ expire.text }}</option>
+                    </select>
+                    <i class="dropdown__icon bx bx-chevron-down" />
                 </div>
                 <div class="invite__link__uses">
                     <p>Max uses</p>
+                    <select class="invite__dropdown" id="max-uses-select" v-model="this.maxUses">
+                        <option v-for="uses in this.maxUsesItems" :value="uses.value">{{ uses.text }}</option>
+                    </select>
+                    <i class="dropdown__icon bx bx-chevron-down" />
                 </div>
-                <button class="invite__link__btn">Generate</button>
+                <button class="invite__link__btn" @click="createInviteLink()">Generate</button>
             </div>
         </div>
         <hr class="search__hr" />
@@ -46,44 +57,6 @@
         </div>
     </div>
 </template>
-
-<!--<div class="header">
-      <h1>Member</h1>
-      <button style="background-color: var(--color-background-mute); margin-left: 250px;  color: var(--color-text)">
-          Requests
-      </button>
-      <button style="background-color: var(--color-background-mute); color: var(--color-text)">Invited</button>
-      <i @click="this.searchMember = !this.searchMember" :class="'bx bx-' + (this.searchMember ? 'minus' : 'plus')"/>
-  </div>
-  <div class="member-list">
-      <div class="search-box" v-if="this.searchMember">
-          <i class="bx bx-search"/>
-          <input class="user-search" type="text" placeholder="Search member" @input="this.isTyping = true"
-                 v-model="this.searchQuery"/>
-      </div>
-      <div class="search-results" v-if="this.searchMember">
-          <p v-if="this.isLoading">Loading...</p>
-          <div class=member v-for="(result, index) in searchResult">
-              <UsernameComponent :user="result" avatar/>
-              <button class="invite-btn" :style="
-              {
-                  'background-color': this.$groups.isInvited(group, result) ? 'var(--color-blue)' : 'var(--color-green)',
-              }
-                  " @click="this.inviteRevokeMember(result)">
-                  {{ this.$groups.isInvited(group, result) ? 'Revoke' : 'Invite' }}
-              </button>
-              <hr v-if="index > 0"/>
-          </div>
-          <p v-if="this.searchResult.length === 0 && !isLoading && this.searchQuery">No entry found.</p>
-      </div>
-      <div class="member" v-for="member in this.member" v-else>
-          <UsernameComponent avatar :user="member"/>
-          <div class="member-edit">
-              <i class="bx bx-chevron-up" v-if="this.selectedMember === member"/>
-              <i class="bx bx-chevron-down" v-else/>
-          </div>
-      </div>
-  </div>-->
 
 <script>
 import _ from 'lodash';
@@ -112,7 +85,27 @@ export default {
             isLoading: false,
             searchResult: [],
             loading: false,
-            setupInviteLink: false
+            setupInviteLink: false,
+            expireAfter: '30min',
+            maxUses: '0',
+            expireItems: [
+                { value: '30min', text: '30 min', milliseconds: 1800000 },
+                { value: '1h', text: '1 hour', milliseconds: 3600000 },
+                { value: '6h', text: '6 hours', milliseconds: 21600000 },
+                { value: '12h', text: '12 hours', milliseconds: 43200000 },
+                { value: '1d', text: '1 day', milliseconds: 86400000 },
+                { value: '7d', text: '7 days', milliseconds: 604800000 },
+                { value: 'never', text: 'Never', milliseconds: 0 },
+            ],
+            maxUsesItems: [
+                { value: '0', text: 'No limit', amount: 0 },
+                { value: '1', text: 'One time', amount: 1 },
+                { value: '5', text: '5 times', amount: 5 },
+                { value: '10', text: '10 times', amount: 10 },
+                { value: '25', text: '25 times', amount: 25 },
+                { value: '50', text: '50 times', amount: 50 },
+                { value: '100', text: '100 times', amount: 100 },
+            ]
         }
     },
     mounted() {
@@ -129,6 +122,11 @@ export default {
                 })
             })
         },
+        getUser() {
+            const user = localStorage.getItem('user');
+            if (user === null) return undefined;
+            return JSON.parse(user);
+        },
         searchAccount(input) {
             this.searchResult = [];
             if (input === undefined || input === '') {
@@ -142,14 +140,13 @@ export default {
                 this.isLoading = false;
             })
         },
-        inviteRevokeMember(member) {
-            const group = JSON.parse(JSON.stringify(this.group));
-            if (this.$groups.isInvited(group, member))
-                group.invited = group.invited.filter(invited => invited.id !== member.uid);
-            else
-                group.invited.push({ id: member.uid, timestamp: Date.now(), role: 0 });
-            this.$groups.updateGroup(group).then(() => {
-                this.searchMember = false
+        createInviteLink(user = undefined) {
+            const expireItem = this.expireItems.find(item => item.value === this.expireAfter);
+            const maxUsesItem = this.maxUsesItems.find(item => item.value === this.maxUses);
+
+            this.$groups.createInvite(this.group.id, expireItem.milliseconds, maxUsesItem.amount, user?.uid).then(invite => {
+                console.log(invite)
+                this.$toast.showNotification('Invite link created.', 10 * 1000, 'success')
             })
         }
     },
@@ -291,6 +288,55 @@ export default {
     font-size: 12px;
     color: var(--color-text-muted);
 }
+
+.invite__dropdown {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-background-modern-mute);
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    color: var(--color-text);
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+}
+
+.dropdown__icon {
+    position: absolute;
+    right: 10px;
+    top: 70%;
+    transform: translateY(-50%);
+    pointer-events: none;
+
+}
+
+.invite__link__btn {
+    background-color: var(--color-green-soft);
+    margin-top: 4px;
+}
+
+.emember__list {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0 25px;
+}
+
+.emember__list img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin: 0 10px;
+    cursor: pointer;
+}
+
+
+
+
+
 
 
 

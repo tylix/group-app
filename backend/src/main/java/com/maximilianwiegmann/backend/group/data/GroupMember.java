@@ -14,6 +14,7 @@ public class GroupMember {
     private long timestamp;
     private int role;
 
+    public static int ROLE_ADMIN = -1;
     public static int ROLE_OWNER = 0;
     public static int ROLE_MEMBER = 1;
 }

@@ -28,6 +28,6 @@ public class GroupInvite {
     private int maxUses;
 
     public boolean isExpired() {
-        return System.currentTimeMillis() > expire;
+        return (expire != -1 && timestamp + expire < System.currentTimeMillis()) || (maxUses != 0 && used >= maxUses);
     }
 }
