@@ -23,6 +23,7 @@ public class GroupInvite {
     private long expire;
     @Nullable
     private String receiver;
+    private String issuer;
 
     private int used;
     private int maxUses;

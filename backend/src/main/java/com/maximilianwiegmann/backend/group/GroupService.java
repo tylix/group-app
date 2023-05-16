@@ -105,7 +105,7 @@ public class GroupService {
         return true;
     }
 
-    public ResponseEntity<?> createInviteLink(String gId, long expire, @Nullable String reciever, int maxUses) {
+    public ResponseEntity<?> createInviteLink(String gId, long expire, @Nullable String reciever, int maxUses, String issuer) {
         GroupData groupData = getGroup(gId);
         if (groupData == null)
             return ResponseEntity.badRequest().build();
@@ -117,7 +117,7 @@ public class GroupService {
         String token = BackendApplication.generateString(20);
 
         GroupInvite invite = GroupInvite.builder().token(token).expire(expire == 0 ? -1 : expire).maxUses(maxUses)
-                .receiver(reciever)
+                .receiver(reciever).issuer(issuer)
                 .build();
         groupData.getInvited().add(invite);
         groupRepository.save(groupData);
@@ -135,8 +135,8 @@ public class GroupService {
     }
 
     public GroupData getGroupByInviteToken(String token) {
-        return groupRepository.findAll().stream().filter(groupData -> groupData.getInvited().stream()
-                .anyMatch(invite -> invite.getToken().equals(token) && !invite.isExpired())).findFirst().orElse(null);
+        return groupRepository.findAllByInvitedToken(token).stream().findFirst().orElse(null);
+        //return groupRepository.findAll().stream().filter(groupData -> groupData.getInvited().stream()   .anyMatch(invite -> invite.getToken() != null && invite.getToken().equals(token) && !invite.isExpired())).findFirst().orElse(null);
     }
 
     public boolean deleteChat(String gId) {

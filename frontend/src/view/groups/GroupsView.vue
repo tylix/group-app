@@ -5,7 +5,32 @@
         </div>
     </div>
     <div class="groups__view">
-        <div class="group__">
+        <div class="join__group" v-if="this.joinGroup">
+            <div class="join__group__header">
+                <h2>Join Group</h2>
+                <h3>{{ this.joinGroup.name }}</h3>
+                <h4>{{ this.joinGroup.description }}</h4>
+            </div>
+            <div class="join__group__member">
+                <h4>Members</h4>
+                <div class="join__group__member__list">
+                    <div class="join__group__member__item" v-for="member in this.joinGroup.member" :key="member.id">
+                        <img class="join__group__member__item__icon" v-if="member.icon" />
+                        <i v-else class="join__group__member__item__icon bx bx-user" />
+                        <h5>{{ member }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="join__group__actions">
+                <div @click="this.joinGroup" class="join__group__actions__join">
+                    <button>Join</button>
+                </div>
+                <div @click="this.cancelJoin()" class="join__group__actions__cancel">
+                    <button>Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div class="group__" v-else>
             <div :class="this.selectedGroup?.id === group.id ? 'group__expanded' : 'group__list'"
                 v-for="group in this.groups" v-if="!this.loading" :key="group.id" :draggable="true"
                 @dragstart="dragStart(group, $event)" @dragend="dragEnd" @dragover="dragOver" @drop="drop(group)">
@@ -36,7 +61,7 @@
 
                             <component class="group__component" :is="category.component" :group="group"
                                 :expanded="this.selectedGroup?.id === group.id" />
-                            <hr class="body__hr" v-if="index !== this.groupCategories.length - 1" />
+                            <hr class="body__hr" v-if="this.selectedGroup?.id !== group.id && index !== this.groupCategories.length - 1" />
                         </div>
                     </div>
                 </div>
@@ -45,51 +70,11 @@
                 </div>
             </div>
             <i v-if="this.loading" class="group__loading bx bx-loader-alt bx-spin" />
-            <i class="group__add bx bx-plus" @click="this.toggleCreateGroup" v-else />
+            <i v-if="!this.loading && !this.createGroup" class="group__add bx bx-plus" @click="this.toggleCreateGroup" />
+            <CreateGroupComponent v-if="this.createGroup && !this.selectedGroup" @close="this.update"
+                @cancel="this.createGroup = false" />
         </div>
     </div>
-    <!--<div class="groups">
-      <div class="search-section">
-          <div class="search-bar">
-              <i class="bx bx-search"/>
-              <input type="text" v-model="this.search" placeholder="Search for groups"/>
-          </div>
-          <div @click="this.toggleCreateGroup" class="create">
-              <i :class="'bx bx-' + (this.createGroup ? 'minus' : 'plus')"/>
-          </div>
-      </div>
-      <div class="group-list">
-          <div class="group" v-for="group in this.groups" :key="group.id"
-               @click="this.toggleSelectGroup(group)">
-              <div class="group-header">
-                  <h3>{{ group.name }}</h3>
-                  <i class="bx bx-chevron-right" v-if="this.selectedGroup === group"/>
-                  <i class="bx bx-chevron-left" v-else/>
-              </div>
-              <p>{{ group.description }}</p>
-          </div>
-      </div>
-  </div>
-
-  <div class="categories" v-if="this.selectedGroup">
-      <div class="tabs">
-          <h2>{{this.selectedGroup.name}}</h2>
-          <div class="tab" v-for="category in this.groupCategories" :key="category.name"
-               @click="this.selectedCategory = category.component">
-              <h3 :style="{textDecoration: this.selectedCategory === category.component ?  'underline' : 'none'}">
-                  {{ category.name }}
-              </h3>
-              <i class="icon" :class="category.icon"/>
-          </div>
-      </div>
-
-      <div class="category" v-if="this.selectedCategory">
-          <component :is="this.selectedCategory" :group="this.selectedGroup" @close="this.update" @update="this.updateGroupSettings"/>
-      </div>
-  </div>
-
-  <CreateGroupComponent v-if="this.createGroup && !this.selectedGroup" @close="this.update"/>-->
-    <CreateGroupComponent v-if="this.createGroup && !this.selectedGroup" @close="this.update" />
 </template>
 
 <script>
@@ -126,7 +111,8 @@ export default {
                     component: ChatComponent
                 },
             ],
-            groups: []
+            groups: [],
+            joinGroup: undefined
         }
     },
     /*props: {
@@ -139,7 +125,7 @@ export default {
         const invlink = this.$route.query.invlink
         if (invlink) {
             this.$groups.getGroupByInviteLink(invlink).then(group => {
-                console.log(group)
+                this.joinGroup = group
             })
         }
         this.loadGroups()
@@ -198,7 +184,14 @@ export default {
             this.selectedGroup = undefined
             this.selectedGroup = JSON.parse(JSON.stringify(data))
             this.loadGroups()
-        }
+        },
+        cancelJoin() {
+            this.joinGroup = false
+            
+            const currentRoute = this.$router.currentRoute
+            const { query, ...params } = currentRoute
+            this.$router.replace({...params})
+        },
     },
     watch: {
         search: function (val) {
@@ -256,6 +249,7 @@ export default {
     height: 4px;
     border-radius: 50px;
     display: none;
+    background: var(--color-background-soft);
 }
 
 .groups__view::-webkit-scrollbar-track {
@@ -281,7 +275,7 @@ export default {
     margin-top: 20px;
     margin-left: 20px;
     height: 94%;
-    width: 300px;
+    width: 340px;
     border: 1px solid var(--color-background-mute);
     border-radius: 10px;
     transition: all 0.4s ease-in-out;
@@ -299,6 +293,7 @@ export default {
     margin-left: auto;
     font-size: 20px;
     cursor: pointer;
+    padding-right: 10px;
 }
 
 .group__icon {
@@ -324,8 +319,8 @@ export default {
     font-size: 30px;
     color: var(--color-text-muted);
     top: 50%;
-    left: 7%;
-    padding-right: 60px;
+    left: 10rem;
+    padding-right: 160px;
 }
 
 .group__add:hover {
@@ -386,143 +381,5 @@ export default {
 
 .group__title {
     cursor: pointer;
-}
-
-
-
-
-
-
-
-
-
-.create {
-    cursor: pointer;
-    padding: 6px 10px;
-    font-size: 25px;
-    border-radius: 5px;
-    margin-left: 10px;
-}
-
-.create:hover {
-    color: var(--color-heading);
-    transition: 0.9s;
-}
-
-.groups {
-    -webkit-user-select: none;
-    user-select: none;
-    position: fixed;
-    left: 7%;
-    top: 20%;
-    background-color: var(--color-background-soft);
-    border-radius: 10px;
-    padding: 20px 20px;
-    width: 24%;
-}
-
-.search-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.search-bar {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--color-background-mute);
-    border-radius: 5px;
-    padding: 5px 10px;
-    width: 85%;
-}
-
-.search-bar i {
-    font-size: 20px;
-    padding-right: 5px;
-}
-
-.search-bar input {
-    border: none;
-    background-color: var(--color-background-soft);
-    font-size: 18px;
-    padding: 5px 10px;
-    outline: none;
-    color: var(--color-text);
-    width: 91%;
-}
-
-.group-list {
-    margin-top: 20px;
-}
-
-.group {
-    cursor: pointer;
-    background-color: var(--color-background-soft);
-    padding: 8px 10px;
-    border-radius: 5px;
-}
-
-.group:hover {
-    background-color: var(--color-background-mute);
-}
-
-.group-header {
-    display: flex;
-    justify-content: space-between;
-}
-
-.group-header i {
-    font-size: 20px;
-    padding-top: 4px;
-}
-
-.group-header h3 {
-    font-size: 18px;
-}
-
-.categories {
-    -webkit-user-select: none;
-    user-select: none;
-    position: fixed;
-    left: 32%;
-    top: 4%;
-    background-color: var(--color-background-soft);
-    border-radius: 10px;
-    width: 64%;
-}
-
-.category {
-    align-items: center;
-    padding: 10px 20px;
-}
-
-.tabs {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-}
-
-.tab {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 5px;
-}
-
-.tab i {
-    font-size: 20px;
-    margin-left: 5px;
-}
-
-.tab:hover {
-    background-color: var(--color-background-mute);
-}
-
-.tabs h2 {
-    font-size: 24px;
-    margin-right: 30px;
 }
 </style>

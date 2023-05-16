@@ -70,7 +70,7 @@ export default {
                 const response = await app.axios.post("/groups/invite/" + gId, {
                     expire: expire,
                     receiver: receiver,
-                    maxUses: maxUses
+                    maxUses: maxUses,
                 })
 
                 return response

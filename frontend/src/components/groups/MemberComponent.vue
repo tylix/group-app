@@ -2,7 +2,51 @@
     <div class="expanded" v-if="this.expanded">
         <div class="emember__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
-            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" online-status/>
+            <UsernameComponent v-for="member in this.member" :user="member" show-avatar direction="column"
+                :options="{ items: [] }" :custom-card="this.customCardComponent" />
+        </div>
+        <div class="member__right__side">
+            <div class="member__invited">
+                <div class="invited__header">
+                    <h3>Invited</h3>
+                    <i @click="this.searchInvited = !this.searchInvited"
+                        :class="'search__btn bx bx-' + (this.searchInvited ? 'minus' : 'plus')" />
+                </div>
+                <div class="invited__body">
+                    <i v-if="this.loadingInvited && this.invitedMember === undefined" class="bx bx-loader-alt bx-spin" />
+                    <div v-else>
+                        <div v-for="(member, index) in this.invitedMember" :key="index">
+                            <div>
+                                <div class="invited__member">
+                                    <UsernameComponent :user="member" show-avatar />
+                                </div>
+                                <hr class="member__invited__hr"  v-if="index < this.invitedMember?.length - 1" />
+                            </div>
+                        </div>
+                        <hr class="invited__hr" />
+                        <div v-for="(link, index) in this.invitedLinks" :key="index">
+                            <div class="invited__link">
+                                <UsernameComponent :user="member.find(member => member.uid === link.issuer)" show-avatar :show-name="false" />
+                                <p>{{ link.token }}</p>
+                                <div class="link__description">
+                                    <p>Used: {{ link.used }}</p>
+                                    <p>Expire: {{ link.expire == -1 ? 'Never' : link.expire }}</p>
+                                </div>
+                            </div>
+                            <hr class="member__invited__hr" v-if="index < this.invitedLinks.length - 1" />
+                        </div>
+                        <p v-if="this.invitedMember?.length == 0 && this.invitedLinks.length == 0"
+                            :style="{ paddingBottom: '20px' }">Nothing here.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="member__requests">
+                <div class="requests__header">
+                    <h3>Requests</h3>
+                </div>
+                <div class="requests__body">
+                </div>
+            </div>
         </div>
     </div>
     <div class="collapsed" v-else>
@@ -23,7 +67,7 @@
 
                 <div class="search__result" v-for="(result, index) in this.searchResult">
                     <UsernameComponent :user="result" show-avatar />
-                    <button class="invite__btn" @click="this.createInviteLink(result)">Invite</button>
+                    <button class="invite__btn" @click="createInviteLink(result)">Invite</button>
                 </div>
                 <p v-if="this.searchResult.length === 0 && !isLoading && this.searchQuery">No entry found.</p>
             </div>
@@ -47,7 +91,7 @@
                     </select>
                     <i class="dropdown__icon bx bx-chevron-down" />
                 </div>
-                <button class="invite__link__btn" @click="createInviteLink()">Generate</button>
+                <button class="invite__link__btn" @click="createInviteLink()">Generate & Copy</button>
             </div>
         </div>
         <hr class="search__hr" />
@@ -61,10 +105,11 @@
 <script>
 import _ from 'lodash';
 import UsernameComponent from "@/components/UsernameComponent.vue";
+import MemberCard from './MemberCard.vue';
 
 export default {
     name: "MemberComponent",
-    components: { UsernameComponent },
+    components: { UsernameComponent, MemberCard },
     props: {
         group: {
             type: Object,
@@ -73,11 +118,14 @@ export default {
         expanded: {
             type: Boolean,
             required: true
-        }
+        },
     },
     data() {
         return {
+            customCardComponent: MemberCard,
             member: [],
+            invitedMember: undefined,
+            invitedLinks: [],
             selectedMember: undefined,
             searchMember: false,
             searchQuery: undefined,
@@ -85,9 +133,10 @@ export default {
             isLoading: false,
             searchResult: [],
             loading: false,
+            loadingInvited: false,
             setupInviteLink: false,
             expireAfter: '30min',
-            maxUses: '0',
+            maxUses: 0,
             expireItems: [
                 { value: '30min', text: '30 min', milliseconds: 1800000 },
                 { value: '1h', text: '1 hour', milliseconds: 3600000 },
@@ -98,13 +147,13 @@ export default {
                 { value: 'never', text: 'Never', milliseconds: 0 },
             ],
             maxUsesItems: [
-                { value: '0', text: 'No limit', amount: 0 },
-                { value: '1', text: 'One time', amount: 1 },
-                { value: '5', text: '5 times', amount: 5 },
-                { value: '10', text: '10 times', amount: 10 },
-                { value: '25', text: '25 times', amount: 25 },
-                { value: '50', text: '50 times', amount: 50 },
-                { value: '100', text: '100 times', amount: 100 },
+                { text: 'No limit', value: 0 },
+                { text: 'One time', value: 1 },
+                { text: '5 times', value: 5 },
+                { text: '10 times', value: 10 },
+                { text: '25 times', value: 25 },
+                { text: '50 times', value: 50 },
+                { text: '100 times', value: 100 },
             ]
         }
     },
@@ -121,6 +170,23 @@ export default {
                         this.loading = false
                 })
             })
+            this.loadInvitedMember()
+        },
+        loadInvitedMember() {
+            this.invitedMember = []
+            this.loadingInvited = true
+            const invitedMember = this.group.invited.filter(invite => invite.receiver && !invite.expired)
+            invitedMember.forEach(invite => {
+                this.$users.getAccount(invite.receiver).then(account => {
+                    this.invitedMember.push(account)
+                    if (this.invitedMember.length === invitedMember.length)
+                        this.loadingInvited = false
+                })
+            })
+            if (invitedMember.length === 0)
+                this.loadingInvited = false
+
+            this.invitedLinks = this.group.invited.filter(invite => !invite.receiver && !invite.expired)
         },
         getUser() {
             const user = localStorage.getItem('user');
@@ -144,9 +210,15 @@ export default {
             const expireItem = this.expireItems.find(item => item.value === this.expireAfter);
             const maxUsesItem = this.maxUsesItems.find(item => item.value === this.maxUses);
 
-            this.$groups.createInvite(this.group.id, expireItem.milliseconds, maxUsesItem.amount, user?.uid).then(invite => {
+            this.$groups.createInvite(this.group.id, expireItem ? expireItem.milliseconds : -1, maxUsesItem ? maxUsesItem.amount : 0, user?.uid).then(invite => {
                 console.log(invite)
-                this.$toast.showNotification('Invite link created.', 10 * 1000, 'success')
+
+                const inviteLink = invite.data.link;
+                navigator.clipboard.writeText(inviteLink).then(() => {
+                    this.$toast.showNotification('Invite link copied to clipboard');
+                }).catch(() => {
+                    this.$toast.showNotification('Failed to copy invite link to clipboard');
+                })
             })
         }
     },
@@ -256,6 +328,7 @@ export default {
 
 .search__btn {
     cursor: pointer;
+    font-size: 20px;
 }
 
 .group__invite {
@@ -323,6 +396,8 @@ export default {
     justify-content: flex-start;
     align-items: center;
     padding: 0 25px;
+    left: 20px;
+    width: 66%;
 }
 
 .emember__list img {
@@ -333,89 +408,91 @@ export default {
     cursor: pointer;
 }
 
-
-
-
-
-
-
-
-.member__avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin: 0 10px;
-    cursor: pointer;
-}
-
-
-.member-list {
-    width: 100%;
-    height: 100%;
-    background-color: var(--color-background);
-    padding: 10px;
-    border-radius: 10px;
-}
-
-.member {
+.member__right__side {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    width: 80%;
-    height: 20px;
-    background-color: var(--color-background);
-    margin: 20px 4px;
-    left: 10%;
-}
-
-.member-edit {
-    cursor: pointer;
-    width: 20px;
-    height: 20px;
-}
-
-.header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    height: 20px;
-    margin: 10px 4px;
-}
-
-.invite-btn {
-    /*background-color: var(--color-green); border: none; border-radius: 5px; padding: 5px; color: var(--color-text);*/
-}
-
-.search-results {
-    width: 100%;
-    height: 100%;
-    background-color: var(--color-background);
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 10px;
-}
-
-
-.search-box {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--color-background-mute);
-    border-radius: 5px;
-    padding: 5px 10px;
-    width: 100%;
-}
-
-.search-box i {
-    font-size: 20px;
-    padding-right: 5px;
-}
-
-.member hr {
+    flex-direction: column;
     position: absolute;
     width: 100%;
-    margin-bottom: 40px;
-    border: 1px solid var(--color-background-mute);
+    top: 0px;
+    align-items: flex-end;
+    padding-right: 20px;
+}
+
+.member__requests {
+    padding: 0 25px;
+    border: 1px solid var(--color-background);
+    border-radius: 10px;
+    width: 35%;
+    max-height: 500px;
+    overflow: scroll;
+    margin-top: 20px;
+}
+
+.member__invited {
+    padding: 0 25px;
+    border: 1px solid var(--color-background);
+    border-radius: 10px;
+    width: 35%;
+    max-height: 500px;
+    overflow: scroll;
+}
+
+.member__invited__hr {
+    border: 1px solid var(--color-background-soft);
+}
+
+.invited__header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 10px;
+    font-size: 18px;
+}
+
+.invited__member {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0 25px;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.invited__link {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    text-align: left;
+    gap: 10px;
+    padding: 5px 25px;
+    width: 100%;
+}
+
+.invited__body {
+    padding-bottom: 20px;
+}
+
+.invited__hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--color-background-modern-mute);
+}
+
+.invited__link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.link__description {
+    position: absolute;
+    top: 60%;
+    left: 21%;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    display: flex;
+    gap: 20px;
 }
 </style>

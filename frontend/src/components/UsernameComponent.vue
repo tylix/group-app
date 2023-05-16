@@ -1,19 +1,21 @@
 <template>
     <div class="username" @mouseover="this.toggleHover(true)" @mouseleave="this.toggleHover(false)">
-        <div class="name" @click="this.redirect()">
+        <div class="name" @click="this.redirect()" :style="{ 'flex-direction': this.direction }">
             <img v-if="this.showAvatar" alt="avatar"
-                  :src="this.user.avatar ? 'data:image/jpeg;base64, ' + this.user.avatar : '/default.png'"/>
-            <i v-if="this.onlineStatus" class="member__dot"/>
-            <p v-if="this.showName">{{ this.fullName ? this.user.firstName + ' ' + this.user.lastName : this.user.username }}</p>
+                :src="this.user.avatar ? 'data:image/jpeg;base64, ' + this.user.avatar : '/default.png'" />
+            <i v-if="this.onlineStatus" class="member__dot" />
+            <p v-if="this.showName">{{ this.fullName ? this.user.firstName + ' ' + this.user.lastName :
+                this.user.username }}</p>
         </div>
         <div v-if="this.hover" class="username-hover">
-            <div class="user-header">
+            <component v-if="this.customCard" :is="this.customCard" :user="this.user" />
+            <div v-else class="user__header">
                 <img alt="avatar"
-                     :src="this.user.avatar ? 'data:image/jpeg;base64, ' + this.user.avatar : '/default.png'"/>
+                    :src="this.user.avatar ? 'data:image/jpeg;base64, ' + this.user.avatar : '/default.png'" />
                 <h4>{{ this.user.firstName + ' ' + this.user.lastName }}</h4>
-                <p>{{ this.user.username}}</p>
+                <p>{{ this.user.username }}</p>
             </div>
-            <button @click="this.redirect()">Profile</button>
+            <button class="profile__btn" @click="this.redirect()">Profile</button>
         </div>
     </div>
 </template>
@@ -41,6 +43,14 @@ export default {
         onlineStatus: {
             type: Boolean,
             default: false
+        },
+        direction: {
+            type: String,
+            default: 'row'
+        },
+        customCard: {
+            type: Object,
+            default: undefined
         }
     },
     data() {
@@ -74,13 +84,27 @@ export default {
 
 .username-hover {
     position: fixed;
-    background-color: var(--color-background-mute);
+    background-color: var(--color-background-modern-mute);
+    border: 1px solid var(--color-background);
     border-radius: 5px;
     width: 300px;
     height: 100px;
     cursor: default;
     z-index: 1000;
     display: flex;
+}
+
+.user__header {
+    direction: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.profile__btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: var(--color-blue);
 }
 
 .name img {
@@ -112,5 +136,4 @@ export default {
     position: absolute;
     margin: 24px 0 0 20px;
 }
-
 </style>

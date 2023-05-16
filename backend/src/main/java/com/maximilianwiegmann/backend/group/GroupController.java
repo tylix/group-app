@@ -118,7 +118,7 @@ public class GroupController {
         System.out.println(groupMember.getRole());
         if (groupMember.getRole() != GroupMember.ROLE_OWNER && groupMember.getRole() != GroupMember.ROLE_ADMIN) return ResponseEntity.status(403).build();
 
-        return groupService.createInviteLink(gId, invite.getExpire(), invite.getReceiver(), invite.getMaxUses());
+        return groupService.createInviteLink(gId, invite.getExpire(), invite.getReceiver(), invite.getMaxUses(), accountData.getId());
     }
 
     @GetMapping("/invite/{iId}")
@@ -130,8 +130,8 @@ public class GroupController {
         if (groupData == null) return ResponseEntity.status(404).build();
 
         GroupMember groupMember = groupData.getMember().stream().filter(member -> member.getId().equals(accountData.getId())).findFirst().orElse(null);
-        if (groupMember != null) return ResponseEntity.status(403).build();
-
+        if (groupMember != null) return ResponseEntity.status(409).build();
+     
         return ResponseEntity.ok(groupData.toResponse().toPublicResponse());
     }
 
