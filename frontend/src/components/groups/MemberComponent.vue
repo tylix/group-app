@@ -30,7 +30,7 @@
                                 <p>{{ link.token }}</p>
                                 <div class="link__description">
                                     <p>Used: {{ link.used }}</p>
-                                    <p>Expire: {{ link.expire == -1 ? 'Never' : link.expire }}</p>
+                                    <p>Expire: {{ link.expire == -1 ? 'Never' : this.$groups.time_ago(link.timestamp + link.expire) }}</p>
                                 </div>
                             </div>
                             <hr class="member__invited__hr" v-if="index < this.invitedLinks.length - 1" />
@@ -497,6 +497,7 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    margin-bottom: 15px;
 }
 
 .link__description {
