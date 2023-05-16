@@ -260,6 +260,9 @@ export default {
 
 .chat__send {}
 
+.chat__textarea {
+    background-color: var(--color-background-modern-mute);
+}
 
 
 

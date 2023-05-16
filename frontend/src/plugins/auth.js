@@ -3,7 +3,7 @@ export default {
 
         const w = {
             login: async (username, password) => {
-                const token = await app.axios.post("/auth/authenticate", {username, password})
+                const token = await app.axios.post("/auth/authenticate", { username, password })
                 if (token.data.token) {
                     const parsedToken = w.parseJwt(token.data.token)
                     if (parsedToken === null) return false
@@ -43,8 +43,11 @@ export default {
                 localStorage.setItem('token', token.data.token)
                 app.config.globalProperties.$users.getUser().then(res => {
                     localStorage.setItem('user', JSON.stringify(res))
-                    if (redirect)
-                        app.config.globalProperties.$router.push('/dashboard');
+                    if (redirect) {
+                        const redirect = localStorage.getItem('redirect')
+                        app.config.globalProperties.$router.push(redirect ? redirect : '/dashboard');
+                        localStorage.removeItem('redirect')
+                    }
                     app.config.globalProperties.$toast.showNotification('Welcome back, ' + res.username, 2000, 'info')
                     app.config.globalProperties.$websocket.connect()
                 })
@@ -57,19 +60,19 @@ export default {
                 return request.data
             },
             verifyCode: async (code) => {
-                const request = await app.axios.post("/twofactor/verify", {code})
+                const request = await app.axios.post("/twofactor/verify", { code })
                 return request.data
             },
             sendOtp: async (code, token) => {
-                const request = await app.axios.post("/auth/otp", {token, code})
+                const request = await app.axios.post("/auth/otp", { token, code })
                 return request.data;
             },
             getStatus: async (token) => {
                 try {
-                    const {data} = await app.axios.post('/auth/status', {token})
+                    const { data } = await app.axios.post('/auth/status', { token })
                     return data
                 } catch (e) {
-                    return {status: 'error'}
+                    return { status: 'error' }
                 }
             },
             isAuthenticated: () => {
@@ -77,11 +80,16 @@ export default {
                 return token !== null && (w.parseJwt(token) !== null && w.parseJwt(token).exp > new Date().getTime() / 1000) && !w.parseJwt(token).tfa
             },
             changeRoute: (to) => {
-                if ((to.path === '/login' || to.path === 'otp') && w.isAuthenticated()) {
-                    return {path: '/dashboard'}
+                if ((to.path === '/login' || to.path === '/signup') && w.isAuthenticated()) {
+                    return { path: '/dashboard' }
+                }
+                if (to.path === '/otp' && w.isAuthenticated() && !w.parseJwt(localStorage.getItem('token')).signup) {
+                    return { path: '/dashboard' }
                 }
                 if (to.meta.auth === undefined ? !w.isAuthenticated() : to.meta.auth && !w.isAuthenticated()) {
-                    return {path: '/login'}
+                    const path = to.path + (to.query !== undefined ? '?' + Object.keys(to.query).map(key => key + '=' + to.query[key]).join('&') : '')
+                    localStorage.setItem('redirect', path)
+                    return { path: '/login' }
                 }
                 return true;
             },

@@ -1,26 +1,26 @@
 <template>
-    <div class="cgroup">
-        <div class="header">
+    <div class="create__group">
+        <div class="create__group__header">
             <h2>Create new group</h2>
         </div>
-        <div class="cr-general">
-            <div class="name">
-                <h4 class="gname">Name</h4>
+        <div class="create__group__general">
+            <div class="create__group__name">
+                <h4 class="create__group__name__title">Name</h4>
                 <input type="text" v-model="this.data.name" :placeholder="this.names[Math.floor(Math.random() * this.names.length)]">
             </div>
-            <div class="description">
+            <div class="create__group__description">
                 <h4>Description</h4>
                 <input type="text" v-model="this.data.description" :placeholder="'Description'">
             </div>
         </div>
-        <div class="cr-member">
+        <div class="create__group__member">
             <h4>Invite Member</h4>
         </div>
-        <div class="actions">
-            <div @click="this.createGroup" class="bcgroup">
+        <div class="create__group__actions">
+            <div @click="this.createGroup" class="create__group__actions__create">
                 <button>Create</button>
             </div>
-            <div class="draft">
+            <div @click="this.$emit('cancel')" class="create__group__actions__draft">
                 <button>Cancel</button>
             </div>
         </div>
@@ -119,89 +119,79 @@ export default {
 </script>
 
 <style>
-.cgroup {
-    position: fixed;
-    left: 35%;
-    top: 4%;
-    width: 50%;
-    background-color: var(--color-background-mute);
+.create__group {
+    position: relative;
+    margin-top: 20px;
+    margin-left: 20px;
+    height: 94%;
+    width: 340px;
+    border: 1px solid var(--color-background-mute);
     border-radius: 10px;
 }
 
-.header {
+.create__group__header {
     padding: 20px 20px;
+    color: var(--color-text-muted);
 }
 
-.cr-general {
+.create__group__general {
     padding: 10px 20px;
     font-size: 18px;
     display: flex;
     align-content: center;
 }
 
-.cr-general input {
+.create__group__general input {
     width: 90%;
     padding: 5px 10px;
     border: none;
-    background-color: var(--color-background-soft);
+    background-color: var(--color-background-modern-mute);
     border-radius: 5px;
     outline: none;
     font-size: 14px;
     color: var(--color-text);
 }
 
-.cr-general input::placeholder {
+.create__group__general input::placeholder {
     opacity: 20%;
 }
 
-.actions {
-    display: flex;
-    padding: 10px 20px;
-}
-
-.bcgroup {
-    margin-left: auto;
-}
-
-.bcgroup button {
-    padding: 5px 10px;
-    border: none;
-    background-color: var(--color-green);
-    border-radius: 5px;
-    outline: none;
-    font-size: 14px;
-    color: var(--color-text);
-    cursor: pointer;
-}
-
-.draft {
-    margin-left: 10px;
-}
-
-.draft button {
-    padding: 5px 10px;
-    border: none;
-    background-color: var(--color-background-soft);
-    border-radius: 5px;
-    outline: none;
-    font-size: 14px;
-    color: var(--color-text);
-    cursor: pointer;
-}
-
-.gname:after {
-    content: '*';
-    color: red;
-    font-size: 15px;
-    opacity: 65%;
-    position: fixed;
-}
-
-.cr-member {
+.create__group__member {
     padding: 10px 20px;
     font-size: 18px;
     display: flex;
     align-content: center;
+}
+
+.create__group__member input {
+    width: 90%;
+    padding: 5px 10px;
+    border: none;
+    background-color: var(--color-background-modern-mute);
+    border-radius: 5px;
+    outline: none;
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.create__group__member input::placeholder {
+    opacity: 20%;
+}
+
+.create__group__actions {
+    top: 10%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.create__group__actions__create button {
+    background-color: var(--color-green-soft);
+}
+
+.create__group__actions__draft button {
+    background-color: var(--color-text);
 }
 
 

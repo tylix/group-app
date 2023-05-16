@@ -3,13 +3,13 @@
         <div class="navbar__left">
             <div class="navbar__logo">Logo</div>
         </div>
-        <div class="navbar__center">
+        <div :class="this.expanded ? 'navabar__cright' : 'navbar__center'">
             <router-link v-for="item in items" class="router-link" :to="item.route">
                 <i :class="item.icon"></i>
                 {{ item.name }}
             </router-link>
         </div>
-        <div class="navbar__right">
+        <div :class="this.expanded ? 'navbar__right_hide' : 'navbar__right'">
             <div class="navbar__notification">
                 <i class="bx bx-bell"></i>
             </div>
@@ -24,7 +24,7 @@
             </div>
         </div>
         <div class="navbar__mobile">
-            <i class="bx bx-menu"></i>
+            <i @click="this.expand()" class="bx bx-menu" />
         </div>
     </nav>
 </template>
@@ -51,7 +51,8 @@ export default {
                     route: '/contacts',
                     icon: 'bx bxs-user-detail',
                 }
-            ]
+            ],
+            expanded: false
         }
     },
     methods: {
@@ -61,6 +62,9 @@ export default {
         },
         getUser() {
             return JSON.parse(localStorage.getItem('user'))
+        },
+        expand() {
+            this.expanded = !this.expanded
         }
     }
 }
@@ -68,6 +72,7 @@ export default {
 
 <style>
 .navbar {
+    -webkit-user-select: none;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -99,6 +104,11 @@ export default {
     font-weight: bold;
 }
 
+.navbar__right_hide {
+    display: none;
+    transition: 0.9s;
+}
+
 .navbar__center .router-link:hover {
     background-color: unset;
     transition: 0.9s;
@@ -110,6 +120,37 @@ export default {
     margin-right: 5px;
     font-size: 20px;
 }
+
+.navabar__cright {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    transition: 0.9s ease-in-out;
+}
+.navabar__cright .router-link {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+    text-decoration: none;
+    color: var(--color-text);
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.navabar__cright .router-link:hover {
+    background-color: unset;
+    transition: 0.9s;
+    border-radius: 5px;
+    color: var(--color-heading);
+}
+
+.navabar__cright .router-link i {
+    margin-right: 5px;
+    font-size: 20px;
+}
+
+
 
 .navbar__right {
     flex: 1;
