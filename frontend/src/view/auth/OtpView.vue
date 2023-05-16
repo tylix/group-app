@@ -16,7 +16,7 @@
                 <p v-else>Confirm</p>
             </button>
         </div>
-        <button class="otp-skip" @click="this.$router.push('/dashboard')">Skip</button>
+        <button class="otp-skip" @click="this.$router.push(localStorage.getItem('redirect') ? localStorage.getItem('redirect') : '/dashboard')">Skip</button>
     </div>
     <div class="otp" v-else>
         <h3>Enter your OTP</h3>

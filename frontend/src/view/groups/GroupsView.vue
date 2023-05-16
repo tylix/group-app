@@ -293,7 +293,6 @@ export default {
     margin-left: auto;
     font-size: 20px;
     cursor: pointer;
-    padding-right: 10px;
 }
 
 .group__icon {

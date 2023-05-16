@@ -3,6 +3,22 @@
 #app {
 }
 
+::-webkit-scrollbar {
+  margin-top: 5px;
+  height: 12px;
+  width: 6px;
+  background: var(--color-background-modern);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-background-mute);
+  -webkit-border-radius: 1ex;;
+}
+
+::-webkit-scrollbar-corner {
+  display: none;
+}
+
 a,
 .green {
   text-decoration: none;

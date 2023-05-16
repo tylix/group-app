@@ -3,7 +3,7 @@
         <div class="emember__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
             <UsernameComponent v-for="member in this.member" :user="member" show-avatar direction="column"
-                :options="{ items: [] }" :custom-card="this.customCardComponent" />
+                :custom-card="this.customCardComponent" />
         </div>
         <div class="member__right__side">
             <div class="member__invited">
@@ -20,13 +20,13 @@
                                 <div class="invited__member">
                                     <UsernameComponent :user="member" show-avatar />
                                 </div>
-                                <hr class="member__invited__hr"  v-if="index < this.invitedMember?.length - 1" />
+                                <hr class="member__invited__hr" v-if="index < this.invitedMember?.length - 1" />
                             </div>
                         </div>
                         <hr class="invited__hr" />
                         <div v-for="(link, index) in this.invitedLinks" :key="index">
                             <div class="invited__link">
-                                <UsernameComponent :user="member.find(member => member.uid === link.issuer)" show-avatar :show-name="false" />
+                                <UsernameComponent v-if="link.issuer" :user="link.issuer" show-avatar />
                                 <p>{{ link.token }}</p>
                                 <div class="link__description">
                                     <p>Used: {{ link.used }}</p>
@@ -166,11 +166,12 @@ export default {
             this.group.member.forEach(member => {
                 this.$users.getAccount(member.id).then(account => {
                     this.member.push(account)
-                    if (this.member.length === this.group.member.length)
+                    if (this.member.length === this.group.member.length) {
                         this.loading = false
+                        this.loadInvitedMember()
+                    }
                 })
             })
-            this.loadInvitedMember()
         },
         loadInvitedMember() {
             this.invitedMember = []
@@ -186,7 +187,18 @@ export default {
             if (invitedMember.length === 0)
                 this.loadingInvited = false
 
-            this.invitedLinks = this.group.invited.filter(invite => !invite.receiver && !invite.expired)
+            this.group.invited.filter(invite => !invite.receiver && !invite.expired).forEach(invite => {
+                const inv = {
+                    token: invite.token,
+                    timestamp: invite.timestamp,
+                    expire: invite.expire,
+                    receiver: invite.receiver,
+                    used: invite.used,
+                    maxUses: invite.maxUses,
+                    issuer: invite.issuer,
+                }
+                this.invitedLinks.push(inv)
+            })
         },
         getUser() {
             const user = localStorage.getItem('user');
@@ -398,6 +410,7 @@ export default {
     padding: 0 25px;
     left: 20px;
     width: 66%;
+    z-index: 100;
 }
 
 .emember__list img {
