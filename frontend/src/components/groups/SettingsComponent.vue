@@ -1,11 +1,41 @@
 <template>
     <div class="expanded" v-if="this.expanded">
-        Big Settings
+        <button class="save__btn" v-if="JSON.stringify(this.group) !== JSON.stringify(this.updatedGroup)" @click="this.saveGroup">Save
+        </button>
+        <div class="settings__categories" v-for="(category, index) in this.categories" :key="index"
+            @click="this.selectedCategory = index" :style="this.selectedCategory === index ? {
+                backgroundColor: 'var(--color-blue-soft)',
+            } : {}">
+            {{ category }}
+        </div>
+        <div class="settings__settings">
+            <div class="settings__item" v-for="(setting, index) in this.getItems(this.selectedCategory)" :key="index">
+                <label>{{ setting.name }}</label>
+                <input v-if="setting.type === 'input'" v-model="setting.model" type="text" />
+
+                <button v-else-if="setting.type === 'button'" :style="{ backgroundColor: setting.data.color }"
+                    @click="this.button(setting)">
+                    {{ setting?.data.text }}
+                </button>
+                <div v-else-if="setting.type === 'switch'">
+                    <div class="hover-text">
+                        <label class="switch">
+                            <input type="checkbox" v-model="setting.model" @click="this.switch(setting)"
+                                :disabled="setting.data.disabled" />
+                            <span class="slider round" />
+                        </label>
+                        <span class="tooltip-text" id="left" v-if="setting.data.disabled">You have to enable your two factor
+                            authentication!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="collapsed" v-else>
         <div class="settings__header">
             <h3 class="settings__title">Settings</h3>
         </div>
+
     </div>
     <!--<div class="header">
         <h1>Settings</h1>
@@ -68,7 +98,7 @@ export default {
                 'Chat',
                 'Advanced',
             ],
-            expandedCategories: [],
+            selectedCategory: 0,
             items: [
                 {
                     name: 'Name',
@@ -185,13 +215,75 @@ export default {
     },
     mounted() {
         this.updatedGroup = JSON.parse(JSON.stringify(this.group))
-        this.expandedCategories = this.categories.map(() => true)
         this.user = JSON.parse(localStorage.getItem('user'))
     }
 }
 </script>
 
 <style>
+.save__btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: var(--color-blue);
+    color: var(--color-text);
+    font-weight: bold;
+    font-size: 16px;
+    transition: 0.4s ease-in-out;
+}
+
+.settings__categories {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    width: 9%;
+    border-radius: 10px;
+    color: var(--color-text-muted);
+}
+
+.settings__categories:hover {
+    cursor: pointer;
+    color: var(--color-text);
+    transition: 0.4s ease-in-out;
+}
+
+.settings__settings {
+    position: absolute;
+    left: 20%;
+    top: 0;
+}
+
+.settings__item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    width: 500px;
+    border-radius: 10px;
+    color: var(--color-text-muted);
+    font-size: 17px;
+}
+
+.settings__item input {
+    border: none;
+    padding: 5px;
+    background-color: var(--color-background-modern-mute);
+    border-radius: 5px;
+    font-size: 15px;
+    color: var(--color-text);
+}
+
+
 
 .settings__header {
     display: flex;
@@ -293,15 +385,15 @@ button {
     border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: var(--color-green);
 }
 
-input:focus + .slider {
+input:focus+.slider {
     box-shadow: 0 0 1px var(--color-green);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     -webkit-transform: translateX(26px);
     -ms-transform: translateX(26px);
     transform: translateX(26px);
@@ -335,6 +427,4 @@ input:checked + .slider:before {
     top: -8px;
     right: 120%;
 }
-
-
 </style>

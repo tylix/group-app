@@ -282,6 +282,11 @@ export default {
     overflow: scroll;
 }
 
+.group__title:hover {
+    color: var(--color-text);
+    transition: all 0.4s ease-in-out;
+}
+
 .group__header {
     display: flex;
     align-items: center;

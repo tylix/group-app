@@ -100,11 +100,16 @@ export default {
 </script>
 
 <style>
+.settings-header {
+    top: 10%;
+    position: fixed;
+}
+
 .settings-g {
     -webkit-user-select: none;
     position: fixed;
     left: 15%;
-    background-color: var(--color-background-mute);
+    top: 10%;
     border-radius: 10px;
     width: 70%;
 }
@@ -132,13 +137,14 @@ export default {
 }
 
 .settings-main-item-input input {
-    width: 70%;
+    width: 50%;
     border: none;
-    border-bottom: 1px solid var(--color-background);
-    background-color: transparent;
+    border-bottom: 1px solid var(--color-background-modern);
+    background-color: var(--color-background-modern-mute);
     outline: none;
     padding: 5px;
     font-size: 16px;
+    color: var(--color-text);
 }
 
 .settings-main-item-input button {
