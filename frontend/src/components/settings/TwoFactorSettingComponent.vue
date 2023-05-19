@@ -6,17 +6,18 @@
         </div>
         <div class="setup" v-if="this.setup">
             <div class="close-sup" @click="this.toggleSetup()">
-                <i class="close-i bx bx-x"/>
+                <i class="close-i bx bx-x" />
             </div>
-            <i class="spin bx bx-loader bx-spin" v-if="this.loading"/>
+            <i class="spin bx bx-loader bx-spin" v-if="this.loading" />
             <div v-if="this.qr" class="qr">
-                <img :src="'data:image/jpeg;base64, ' + this.qr.qr" alt="QR Code" width="220" height="220"/>
+                <img :src="'data:image/jpeg;base64, ' + this.qr.qr" alt="QR Code" width="220" height="220" />
                 <p>Scan this QR code with your authenticator app</p>
                 <p>Or enter this code manually:</p>
                 <p class="secret">{{ this.qr.secret }}</p>
                 <div class="input">
                     <label for="verify">Verify Code</label>
-                    <input v-model="this.code" id="verify" type="text">
+                    <input required :style="{ backgroundColor: 'var(--color-background-modern)' }"
+                        pattern="^[0-9]{3} [0-9]{3}$" @input="this.formatOtp()" v-model="this.code" id="verify" type="text">
                     <button @click="this.verifyCode()">Submit</button>
                 </div>
             </div>
@@ -53,12 +54,28 @@ export default {
             })
         },
         verifyCode() {
-            this.$auth.verifyCode(this.code).then(() => {
+            if (!this.code) {
+                this.$toast.showNotification('Please enter a code', 5000, 'error')
+                return
+            }
+            if(this.code.length < 7) {
+                this.$toast.showNotification('Please enter a valid code', 5000, 'error')
+                return
+            }
+            const otp = this.code.replace(/\s/g, '')
+            this.$auth.verifyCode(otp).then(() => {
                 this.$auth.logout()
                 this.$toast.showNotification('Two Factor Authentication has been setup', 5000)
             }).catch(er => {
-                console.error(er)
+                this.$toast.showNotification('Verification failed.', 5000, 'error')
             })
+        },
+        formatOtp() {
+            this.code = this.code.replace(/\D/g, '');
+
+            if (this.code.length > 3) {
+                this.code = this.code.slice(0, 3) + ' ' + this.code.slice(3, 6);
+            }
         }
     },
     mounted() {
@@ -68,7 +85,6 @@ export default {
 </script>
 
 <style>
-
 .setup .input {
     display: flex;
     flex-direction: column;
@@ -76,18 +92,20 @@ export default {
     justify-content: center;
     margin-top: 20px;
 }
+
 .setup .input button {
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 .setup .secret {
     -webkit-user-select: text;
     font-size: 17px;
 }
+
 .setup {
     height: 60%;
     width: 42%;
-    background-color: var(--color-background-soft);
+    background-color: var(--color-background-modern-mute);
     border-radius: 10px;
     position: fixed;
     left: 30%;
@@ -129,5 +147,15 @@ export default {
     top: 50%;
     transform: translate(-50%, -50%);
     font-size: 50px;
+}
+
+.input input {
+    border-radius: 10px;
+    text-align: center;
+}
+
+.input button {
+    background-color: var(--color-blue-mute);
+    font-size: 16px;
 }
 </style>
