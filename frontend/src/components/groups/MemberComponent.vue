@@ -13,7 +13,7 @@
                         :class="'search__btn bx bx-' + (this.searchInvited ? 'minus' : 'plus')" />
                 </div>
                 <div class="invited__body">
-                    <i v-if="this.loadingInvited && this.invitedMember === undefined" class="bx bx-loader-alt bx-spin" />
+                    <i v-if="this.loadingInvited" class="bx bx-loader-alt bx-spin" />
                     <div v-else>
                         <div v-for="(member, index) in this.invitedMember" :key="index">
                             <div>
@@ -30,7 +30,8 @@
                                 <p>{{ link.token }}</p>
                                 <div class="link__description">
                                     <p>Used: {{ link.used }}</p>
-                                    <p>Expire: {{ link.expire == -1 ? 'Never' : this.$groups.time_ago(link.timestamp + link.expire) }}</p>
+                                    <p>Expire: {{ link.expire == -1 ? 'Never' : this.$groups.time_ago(link.timestamp +
+                                        link.expire) }}</p>
                                 </div>
                             </div>
                             <hr class="member__invited__hr" v-if="index < this.invitedLinks.length - 1" />
@@ -184,8 +185,9 @@ export default {
                         this.loadingInvited = false
                 })
             })
-            if (invitedMember.length === 0)
+            if (invitedMember.length === 0) {
                 this.loadingInvited = false
+            }
 
             this.group.invited.filter(invite => !invite.receiver && !invite.expired).forEach(invite => {
                 const inv = {
@@ -223,13 +225,15 @@ export default {
             const maxUsesItem = this.maxUsesItems.find(item => item.value === this.maxUses);
 
             this.$groups.createInvite(this.group.id, expireItem ? expireItem.milliseconds : -1, maxUsesItem ? maxUsesItem.amount : 0, user?.uid).then(invite => {
-                console.log(invite)
-
-                const inviteLink = invite.data.link;
+                if (user) {
+                    this.$toast.showNotification(`${user.username} has been invited to the group.`);
+                    return
+                }
+                const inviteLink = `https://maximilianwiegmann.com/groups?invlink=${invite.data.token}`;
                 navigator.clipboard.writeText(inviteLink).then(() => {
                     this.$toast.showNotification('Invite link copied to clipboard');
                 }).catch(() => {
-                    this.$toast.showNotification('Failed to copy invite link to clipboard');
+                    this.$toast.showNotification('Failed to copy invite link to clipboard', 5000, 'error');
                 })
             })
         }
