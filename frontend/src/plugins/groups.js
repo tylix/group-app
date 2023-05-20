@@ -45,6 +45,11 @@ export default {
                 return group.data
             },
 
+            joinByLink: async (token) => {
+                const group = await app.axios.post('/groups/join_link/' + token)
+                return group.data
+            },
+
             getGroupRole: (group, uId) => {
                 const member = group.member.find(m => m.id === uId)
                 if (member) {

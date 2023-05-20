@@ -1,5 +1,15 @@
 <template>
-    <div class="expanded" v-if="this.expanded">
+    <div class="preview" v-if="this.joinPreview">
+        <div class="member__header">
+            <h3 class="member__title">Member</h3>
+            <i @click="this.searchMember = !this.searchMember"/>
+        </div>
+        <div class="member__list">
+            <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
+            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" online-status />
+        </div>
+    </div>
+    <div class="expanded" v-else-if="this.expanded">
         <div class="emember__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
             <UsernameComponent v-for="member in this.member" :user="member" show-avatar direction="column"
@@ -27,7 +37,7 @@
                         <div v-for="(link, index) in this.invitedLinks" :key="index">
                             <div class="invited__link">
                                 <UsernameComponent v-if="link.issuer" :user="link.issuer" show-avatar />
-                                <p>{{ link.token }}</p>
+                                <p :style="{'-webkit-user-select': 'text'}">{{ link.token }}</p>
                                 <div class="link__description">
                                     <p>Used: {{ link.used }}</p>
                                     <p>Expire: {{ link.expire == -1 ? 'Never' : this.$groups.time_ago(link.timestamp +
@@ -120,6 +130,11 @@ export default {
             type: Boolean,
             required: true
         },
+        joinPreview: {
+            type: Boolean,
+            required: false,
+            default: false
+        }
     },
     data() {
         return {
@@ -502,6 +517,10 @@ export default {
     flex-direction: row;
     align-items: center;
     margin-bottom: 15px;
+}
+
+.invited__link p {
+    -webkit-user-select: text;
 }
 
 .link__description {

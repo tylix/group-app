@@ -1,6 +1,8 @@
 package com.maximilianwiegmann.backend.group;
 
 import com.maximilianwiegmann.backend.BackendApplication;
+import com.maximilianwiegmann.backend.account.AccountData;
+import com.maximilianwiegmann.backend.account.AccountRepository;
 import com.maximilianwiegmann.backend.group.data.GroupData;
 import com.maximilianwiegmann.backend.group.data.GroupInvite;
 import com.maximilianwiegmann.backend.group.data.GroupMember;
@@ -24,6 +26,7 @@ import java.util.Map;
 public class GroupService {
 
     private final GroupRepository groupRepository;
+    private final AccountRepository accountRepository;
 
     private final NotificationService notificationService;
 
@@ -85,27 +88,49 @@ public class GroupService {
         GroupData group = groupRepository.findById(gid).orElse(null);
         if (group == null)
             return null;
-        if (group.getInvited().stream().noneMatch(invited -> invited.getReceiver().equals(uid))
+        if (group.getInvited().stream()
+                .noneMatch(invited -> invited.getReceiver() != null && invited.getReceiver().equals(uid))
                 || group.getMember().stream().anyMatch(member -> member.getId().equals(uid)))
             return null;
         group.getMember().add(new GroupMember(uid, System.currentTimeMillis(), GroupMember.ROLE_MEMBER));
-        group.getInvited().removeIf(invited -> invited.getReceiver().equals(uid));
+        group.getInvited().removeIf(invited -> invited.getReceiver() != null && invited.getReceiver().equals(uid));
         group.getRequests().removeIf(request -> request.getId().equals(uid));
         return groupRepository.save(group).toResponse();
     }
 
-    public boolean leaveGroup(String gid, String uid) {
-        GroupData group = groupRepository.findById(gid).orElse(null);
+    public GroupResponse joinByLink(String token, AccountData account) {
+        GroupData group = groupRepository.findByInviteToken(token).stream().findFirst().orElse(null);
         if (group == null)
-            return false;
-        if (group.getMember().stream().noneMatch(member -> member.getId().equals(uid)))
-            return false;
-        group.getMember().removeIf(member -> member.getId().equals(uid));
-        groupRepository.save(group);
-        return true;
+            return null;
+        if (group.getMember().stream().anyMatch(member -> member.getId().equals(account.getId())))
+            return null;
+        GroupInvite invite = group.getInvited().stream().filter(invited -> invited.getToken().equals(token)).findFirst()
+                .orElse(null);
+        if (invite == null)
+            return null;
+        if (invite.isExpired())
+            return null;
+        if ((Boolean) group.getSettingMap().get("requireTfa") && account.getTfaSecret() == null)
+            return null;
+        group.getMember().add(new GroupMember(account.getId(), System.currentTimeMillis(), GroupMember.ROLE_MEMBER));
+        invite.use();
+        group.updateInvite(invite);
+        return groupRepository.save(group).toResponse();
     }
 
-    public ResponseEntity<?> createInviteLink(String gId, long expire, @Nullable String reciever, int maxUses, String issuer) {
+    public GroupResponse leaveGroup(String gid, String uid) {
+        GroupData group = groupRepository.findById(gid).orElse(null);
+        if (group == null)
+            return null;
+        if (group.getMember().stream().noneMatch(member -> member.getId().equals(uid)))
+            return null;
+        group.getMember().removeIf(member -> member.getId().equals(uid));
+        group = groupRepository.save(group);
+        return group.toResponse();
+    }
+
+    public ResponseEntity<?> createInviteLink(String gId, long expire, @Nullable String reciever, int maxUses,
+            String issuer) {
         GroupData groupData = getGroup(gId);
         if (groupData == null)
             return ResponseEntity.badRequest().build();
@@ -135,8 +160,18 @@ public class GroupService {
     }
 
     public GroupData getGroupByInviteToken(String token) {
-        return groupRepository.findAllByInvitedToken(token).stream().findFirst().orElse(null);
-        //return groupRepository.findAll().stream().filter(groupData -> groupData.getInvited().stream()   .anyMatch(invite -> invite.getToken() != null && invite.getToken().equals(token) && !invite.isExpired())).findFirst().orElse(null);
+        GroupData group = groupRepository.findByInviteToken(token).stream().findFirst().orElse(null);
+        if (group == null)
+            return null;
+        GroupInvite invite = group.getInvited().stream().filter(invited -> invited.getToken().equals(token)).findFirst()
+                .orElse(null);
+        if (invite.isExpired())
+            return null;
+        return group;
+        // return groupRepository.findAll().stream().filter(groupData ->
+        // groupData.getInvited().stream() .anyMatch(invite -> invite.getToken() != null
+        // && invite.getToken().equals(token) &&
+        // !invite.isExpired())).findFirst().orElse(null);
     }
 
     public boolean deleteChat(String gId) {

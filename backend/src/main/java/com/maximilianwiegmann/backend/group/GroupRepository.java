@@ -16,6 +16,6 @@ public interface GroupRepository extends MongoRepository<GroupData, String> {
     List<GroupData> findAllByInvitedContains(String uid);
 
     @Query("{ 'invited' : { $elemMatch: { 'token' : ?0 } } }")
-    Optional<GroupData> findAllByInvitedToken(String token);
+    Optional<GroupData> findByInviteToken(String token);
 
 }

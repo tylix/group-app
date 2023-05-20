@@ -31,4 +31,8 @@ public class GroupInvite {
     public boolean isExpired() {
         return (expire != -1 && timestamp + expire < System.currentTimeMillis()) || (maxUses != 0 && used >= maxUses);
     }
+
+    public void use() {
+        used++;
+    }
 }

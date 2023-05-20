@@ -59,6 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (ExpiredJwtException | NullPointerException e) {
             filterChain.doFilter(request, response);
             System.out.println("expired");
+            return;
         }
         filterChain.doFilter(request, response);
     }

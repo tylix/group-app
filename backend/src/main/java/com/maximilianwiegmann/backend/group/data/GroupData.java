@@ -45,4 +45,9 @@ public class GroupData {
                 .build();
     }
 
+    public void updateInvite(GroupInvite invite) {
+        invited.removeIf(current -> current.getToken().equals(invite.getToken()));
+        invited.add(invite);
+    }
+
 }

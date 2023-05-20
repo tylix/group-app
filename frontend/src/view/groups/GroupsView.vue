@@ -5,32 +5,33 @@
         </div>
     </div>
     <div class="groups__view">
-        <div class="join__group" v-if="this.joinGroup">
-            <div class="join__group__header">
-                <h2>Join Group</h2>
-                <h3>{{ this.joinGroup.name }}</h3>
-                <h4>{{ this.joinGroup.description }}</h4>
-            </div>
-            <div class="join__group__member">
-                <h4>Members</h4>
-                <div class="join__group__member__list">
-                    <div class="join__group__member__item" v-for="member in this.joinGroup.member" :key="member.id">
-                        <img class="join__group__member__item__icon" v-if="member.icon" />
-                        <i v-else class="join__group__member__item__icon bx bx-user" />
-                        <h5>{{ member }}</h5>
+        <div class="group__">
+            <div class="join__group" v-if="this.joinGroup">
+                <div class="join__group__header">
+                    <img class="group__icon" v-if="this.joinGroup.icon">
+                    <i v-else class="group__icon bx bx-group" />
+                    <div class="join__group__title">
+                        <h3>{{ this.joinGroup.name }}</h3>
+                        <h4>{{ this.joinGroup.description }}</h4>
+                    </div>
+                    <div class="join__options">
+                        <i class="join__deny bx bx-x" @click="this.cancelJoin()" />
+                        <i class="join__accept bx bx-check" @click="this.joinGroupByLink()" />
                     </div>
                 </div>
-            </div>
-            <div class="join__group__actions">
-                <div @click="this.joinGroup" class="join__group__actions__join">
-                    <button>Join</button>
+                <hr class="header__hr" />
+                <div class="join__group__member">
+                    <MemberComponent :group="this.joinGroup" :expanded="false" :join-preview="true" />
+                    <!--<h4>Members</h4>
+                    <div class="join__group__member__list">
+                        <div class="join__group__member__item" v-for="member in this.joinGroup.member" :key="member.id">
+                            <img class="join__group__member__item__icon" v-if="member.icon" />
+                            <i v-else class="join__group__member__item__icon bx bx-user" />
+                            <h5>{{ member }}</h5>
+                        </div>
+                    </div>-->
                 </div>
-                <div @click="this.cancelJoin()" class="join__group__actions__cancel">
-                    <button>Cancel</button>
-                </div>
             </div>
-        </div>
-        <div class="group__" v-else>
             <div :class="this.selectedGroup?.id === group.id ? 'group__expanded' : 'group__list'"
                 v-for="group in this.groups" v-if="!this.loading" :key="group.id" :draggable="true"
                 @dragstart="dragStart(group, $event)" @dragend="dragEnd" @dragover="dragOver" @drop="drop(group)">
@@ -60,8 +61,9 @@
                             v-if="this.selectedCategory === undefined ? true : this.selectedGroup?.id === group.id ? this.selectedCategory?.name === category?.name : true">
 
                             <component class="group__component" :is="category.component" :group="group"
-                                :expanded="this.selectedGroup?.id === group.id" />
-                            <hr class="body__hr" v-if="this.selectedGroup?.id !== group.id && index !== this.groupCategories.length - 1" />
+                                :expanded="this.selectedGroup?.id === group.id" @update="this.updateGroupSettings" @close="this.update" />
+                            <hr class="body__hr"
+                                v-if="this.selectedGroup?.id !== group.id && index !== this.groupCategories.length - 1" />
                         </div>
                     </div>
                 </div>
@@ -112,7 +114,8 @@ export default {
                 },
             ],
             groups: [],
-            joinGroup: undefined
+            joinGroup: undefined,
+            invlink: undefined
         }
     },
     /*props: {
@@ -122,10 +125,21 @@ export default {
         }
     },*/
     mounted() {
-        const invlink = this.$route.query.invlink
-        if (invlink) {
-            this.$groups.getGroupByInviteLink(invlink).then(group => {
+        this.invlink = this.$route.query.invlink
+        if (this.invlink) {
+            this.$groups.getGroupByInviteLink(this.invlink).then(group => {
+                if (group.settingMap.requireTfa && !this.$auth.isOtpEnabled) {
+                    this.$toast.showNotification(`You need to enable 2FA to join this group!`, 5000, 'error')
+                    return
+                }
                 this.joinGroup = group
+            }).catch(err => {
+                console.log(err)
+                this.clearRoute()
+                if (err.response.status === 409)
+                    this.$toast.showNotification(`You are already a member of this group!`, 5000, 'error')
+                if (err.response.status === 404)
+                    this.$toast.showNotification(`This token is invalid!`, 5000, 'error')
             })
         }
         this.loadGroups()
@@ -145,6 +159,7 @@ export default {
             }
         },
         dragEnd() {
+            // jZc7rIJH426RZeIHgaMg
             this.dragged = undefined
         },
         dragOver(event) {
@@ -187,11 +202,23 @@ export default {
         },
         cancelJoin() {
             this.joinGroup = false
-            
+            this.clearRoute()
+        },
+        joinGroupByLink() {
+            this.$groups.joinByLink(this.invlink).then(() => {
+                this.$toast.showNotification(`You joined the group ${this.joinGroup.name}`)
+                this.joinGroup = false
+                this.loadGroups()
+                this.clearRoute()
+            }).catch(() => {
+                this.$toast.showNotification(`An error occurred while joining ${this.joinGroup.name}`, 5000, 'error')
+            })
+        },
+        clearRoute() {
             const currentRoute = this.$router.currentRoute
             const { query, ...params } = currentRoute
-            this.$router.replace({...params})
-        },
+            this.$router.replace({ ...params })
+        }
     },
     watch: {
         search: function (val) {
@@ -206,6 +233,47 @@ export default {
 </script>
 
 <style>
+.join__group {
+    position: relative;
+    margin-top: 20px;
+    margin-left: 20px;
+    height: 94%;
+    width: 340px;
+    border: 1px solid var(--color-background);
+    border-radius: 10px;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 100;
+    margin-right: 40px;
+}
+
+.join__group__header {
+    margin: 20px;
+    align-items: center;
+    display: flex;
+}
+
+.join__options {
+    margin-left: auto;
+    font-size: 24px;
+}
+
+.join__accept {
+    color: var(--color-green);
+    cursor: pointer;
+}
+
+.join__deny {
+    margin-right: 8px;
+    color: var(--color-red);
+    cursor: pointer;
+}
+
+.join__group__title {
+    gap: 8px;
+}
+
 .group__search {
     position: fixed;
     top: 9%;
@@ -358,7 +426,7 @@ export default {
 }
 
 .group__component {
-    margin-top: 20px;
+    /*margin-top: 20px;*/
 }
 
 .body__hr {
