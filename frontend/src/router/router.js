@@ -12,7 +12,6 @@ const router = createRouter({
         {path: '/signup', meta: {auth: false}, name: 'Signup', component: () => import('@/view/auth/SignupView.vue')},
         {path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('@/view/404.vue')},
         {path: '/groups', meta: {auth: true}, name: 'Groups', component: () => import('@/view/groups/GroupsView.vue')},
-        {path: '/notifications', meta: {auth: true}, name: 'Notifications', component: () => import('@/view/NotificationsView.vue')},
         {path: '/settings', meta: {auth: true}, name: 'Settings', component: () => import('@/view/account/SettingsView.vue')},
         {path: '/otp', meta: {auth: false}, name: 'OTP', component: () => import('@/view/auth/OtpView.vue')},
         {path: '/account/:username', meta: {auth: true}, props: true, name: 'Account', component: () => import('@/view/account/AccountView.vue')},

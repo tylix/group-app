@@ -2,6 +2,7 @@ package com.maximilianwiegmann.backend.account;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.maximilianwiegmann.backend.account.signinwith.SigninWith;
+import com.maximilianwiegmann.backend.notifications.Notification;
 import com.maximilianwiegmann.backend.security.token.Token;
 import lombok.*;
 import lombok.Builder.Default;
@@ -40,6 +41,9 @@ public class AccountData implements UserDetails {
 
     @DBRef(db = "tokens")
     private List<Token> tokens;
+
+    @DBRef(db = "notifications")
+    private List<Notification> notifications;
     
     @DBRef(db = "signinwith")
     @JsonManagedReference

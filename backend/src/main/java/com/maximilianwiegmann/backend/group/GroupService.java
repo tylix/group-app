@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -115,6 +116,13 @@ public class GroupService {
         group.getMember().add(new GroupMember(account.getId(), System.currentTimeMillis(), GroupMember.ROLE_MEMBER));
         invite.use();
         group.updateInvite(invite);
+
+        if (invite.getIssuer() != null)
+            notificationService.sendNotification(invite.getIssuer(),
+                    Notification.builder()
+                            .title("Invite code has been used")
+                            .body(account.getUsername() + " has used your invite link.")
+                            .build());
         return groupRepository.save(group).toResponse();
     }
 
@@ -125,6 +133,10 @@ public class GroupService {
         if (group.getMember().stream().noneMatch(member -> member.getId().equals(uid)))
             return null;
         group.getMember().removeIf(member -> member.getId().equals(uid));
+        if (group.getMember().isEmpty()) {
+            deleteGroup(group.getId());
+            return null;
+        }
         group = groupRepository.save(group);
         return group.toResponse();
     }
@@ -165,7 +177,12 @@ public class GroupService {
             return null;
         GroupInvite invite = group.getInvited().stream().filter(invited -> invited.getToken().equals(token)).findFirst()
                 .orElse(null);
+        if (invite == null)
+            return null;
         if (invite.isExpired())
+            return null;
+        AccountData account = (AccountData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (invite.getReceiver() != null && !invite.getReceiver().equals(account.getId()))
             return null;
         return group;
         // return groupRepository.findAll().stream().filter(groupData ->

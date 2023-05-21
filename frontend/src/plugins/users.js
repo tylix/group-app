@@ -19,6 +19,11 @@ export default {
             getUser: async () => {
                 const account = await app.axios.get('/accounts')
                 return account.data
+            },
+
+            getNotifications: async () => {
+                const notifications = await app.axios.get('/notifications')
+                return notifications.data
             }
         }
 

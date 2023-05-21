@@ -34,5 +34,7 @@ public class GroupInvite {
 
     public void use() {
         used++;
+        if (receiver != null)
+            expire = 1;
     }
 }

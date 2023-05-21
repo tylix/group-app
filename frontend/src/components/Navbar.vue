@@ -11,10 +11,13 @@
         </div>
         <div :class="this.expanded ? 'navbar__right_hide' : 'navbar__right'">
             <div class="navbar__notification">
-                <i class="bx bx-bell"></i>
+                <i @click="this.showNotifications = !this.showNotifications" class="bx bx-bell"></i>
+                <p @click="this.showNotifications = !this.showNotifications" class="bell__number" v-if="this.getUnreadNotifications() > 0">{{ this.getUnreadNotifications() }}</p>
+
+                <NotificationComponent class="notification__component" v-if="this.showNotifications" />
             </div>
             <div class="navbar__profile">
-                <img src="/default.png" alt="Avatar" @click="this.dropdownOpen = !this.dropdownOpen"/>
+                <img src="/default.png" alt="Avatar" @click="this.dropdownOpen = !this.dropdownOpen" />
                 <div class="navbar__dropdown" v-if="dropdownOpen">
                     <p class="navbar__dropdown__title">Welcome, {{ this.getUser().username }}</p>
                     <a @click="this.clickProfile()">My Profile</a>
@@ -30,6 +33,8 @@
 </template>
 
 <script>
+import NotificationComponent from './NotificationComponent.vue'
+
 export default {
     name: "Navbar",
     data() {
@@ -37,36 +42,51 @@ export default {
             dropdownOpen: false,
             items: [
                 {
-                    name: 'Home',
-                    route: '/',
-                    icon: 'bx bx-home',
+                    name: "Home",
+                    route: "/",
+                    icon: "bx bx-home",
                 },
                 {
-                    name: 'Groups',
-                    route: '/groups',
-                    icon: 'bx bx-group',
+                    name: "Groups",
+                    route: "/groups",
+                    icon: "bx bx-group",
                 },
                 {
-                    name: 'Contacts',
-                    route: '/contacts',
-                    icon: 'bx bxs-user-detail',
+                    name: "Contacts",
+                    route: "/contacts",
+                    icon: "bx bxs-user-detail",
                 }
             ],
-            expanded: false
-        }
+            expanded: false,
+            notifications: [],
+            showNotifications: false
+        };
     },
     methods: {
         clickProfile() {
-            this.$router.push('/account/' + JSON.parse(localStorage.getItem('user')).username)
-            this.dropdownOpen = false
+            this.$router.push("/account/" + JSON.parse(localStorage.getItem("user")).username);
+            this.dropdownOpen = false;
         },
         getUser() {
-            return JSON.parse(localStorage.getItem('user'))
+            return JSON.parse(localStorage.getItem("user"));
         },
         expand() {
-            this.expanded = !this.expanded
+            this.expanded = !this.expanded;
+        },
+        getUnreadNotifications() {
+            const length = this.notifications.filter(n => n.read === false).length;
+            console.log(length);
+            return length;
         }
-    }
+    },
+    mounted() {
+        if (this.getUser())
+            this.$users.getNotifications().then(res => {
+                this.notifications = res;
+                console.log(this.notifications);
+            });
+    },
+    components: { NotificationComponent }
 }
 </script>
 
@@ -128,6 +148,7 @@ export default {
     align-items: center;
     transition: 0.9s ease-in-out;
 }
+
 .navabar__cright .router-link {
     display: flex;
     align-items: center;
@@ -243,6 +264,32 @@ export default {
     margin-bottom: 5px;
 }
 
+.bell__number {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--color-red);
+    color: var(--color-text);
+    font-size: 12px;
+    padding: 2px 5px;
+    border-radius: 50%;
+    font-weight: bold;
+    height: 20px;
+}
+
+.notification__component {
+    width: 300px;
+    height: 400px;
+    background-color: var(--color-blue-soft);
+    position: absolute;
+    top: 100%;
+    right: 0;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    z-index: 1000;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
     .navbar__center {
@@ -256,5 +303,4 @@ export default {
         margin-left: 8px;
     }
 }
-
 </style>
