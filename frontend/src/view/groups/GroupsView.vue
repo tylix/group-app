@@ -61,7 +61,7 @@
                             v-if="this.selectedCategory === undefined ? true : this.selectedGroup?.id === group.id ? this.selectedCategory?.name === category?.name : true">
 
                             <component class="group__component" :is="category.component" :group="group"
-                                :expanded="this.selectedGroup?.id === group.id" @update="this.updateGroupSettings" @close="this.update" />
+                                :expanded="this.selectedGroup?.id === group.id" @update="this.updateGroupSettings" @close="" />
                             <hr class="body__hr"
                                 v-if="this.selectedGroup?.id !== group.id && index !== this.groupCategories.length - 1" />
                         </div>
@@ -426,7 +426,7 @@ export default {
 }
 
 .group__component {
-    /*margin-top: 20px;*/
+    margin-top: 20px;
 }
 
 .body__hr {

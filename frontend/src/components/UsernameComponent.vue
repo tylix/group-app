@@ -88,10 +88,11 @@ export default {
     border: 1px solid var(--color-background);
     border-radius: 5px;
     width: 300px;
-    height: 100px;
+    height: auto;
     cursor: default;
     z-index: 1000;
     display: flex;
+    padding: 20px 20px;
 }
 
 .user__header {

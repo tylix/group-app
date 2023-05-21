@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -72,6 +73,7 @@ public class AuthenticationService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
+                .notifications(new ArrayList<>())
                 .build();
         var savedUser = repository.save(account);
         var jwtToken = jwtService.generateRegisterToken(account);
@@ -200,6 +202,8 @@ public class AuthenticationService {
                     String username = user.getString("login");
                     int id = user.getInt("id");
                     String avatarUrl = user.getString("avatar_url");
+
+                    System.out.println(user.toString());
 
                     String[] nameSplit = user.has("name") ? user.getString("name").split(" ") : new String[0];
                     String lastName = nameSplit.length > 0 ? nameSplit[nameSplit.length - 1] : "";

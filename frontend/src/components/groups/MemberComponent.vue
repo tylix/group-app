@@ -2,11 +2,11 @@
     <div class="preview" v-if="this.joinPreview">
         <div class="member__header">
             <h3 class="member__title">Member</h3>
-            <i @click="this.searchMember = !this.searchMember"/>
+            <i @click="this.searchMember = !this.searchMember" />
         </div>
         <div class="member__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
-            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" online-status />
+            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" />
         </div>
     </div>
     <div class="expanded" v-else-if="this.expanded">
@@ -19,35 +19,40 @@
             <div class="member__invited">
                 <div class="invited__header">
                     <h3>Invited</h3>
-                    <i @click="this.searchInvited = !this.searchInvited"
-                        :class="'search__btn bx bx-' + (this.searchInvited ? 'minus' : 'plus')" />
+                    <i v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0" @click="this.searchMember = !this.searchMember"
+                        :class="'search__btn bx bx-' + (this.searchMember ? 'minus' : 'plus')" />
                 </div>
-                <div class="invited__body">
-                    <i v-if="this.loadingInvited" class="bx bx-loader-alt bx-spin" />
+                <div :class="this.searchMember ? 'invited__body__s' : 'invited__body'">
+                    <div v-if="this.searchMember">
+                        <SearchMember :group="this.group" :member="this.member" />
+                    </div>
                     <div v-else>
-                        <div v-for="(member, index) in this.invitedMember" :key="index">
-                            <div>
-                                <div class="invited__member">
-                                    <UsernameComponent :user="member" show-avatar />
-                                </div>
-                                <hr class="member__invited__hr" v-if="index < this.invitedMember?.length - 1" />
-                            </div>
-                        </div>
-                        <hr class="invited__hr" />
-                        <div v-for="(link, index) in this.invitedLinks" :key="index">
-                            <div class="invited__link">
-                                <UsernameComponent v-if="link.issuer" :user="link.issuer" show-avatar />
-                                <p :style="{'-webkit-user-select': 'text'}">{{ link.token }}</p>
-                                <div class="link__description">
-                                    <p>Used: {{ link.used }}</p>
-                                    <p>Expire: {{ link.expire == -1 ? 'Never' : this.$groups.time_ago(link.timestamp +
-                                        link.expire) }}</p>
+                        <i v-if="this.loadingInvited" class="bx bx-loader-alt bx-spin" />
+                        <div v-else>
+                            <div v-for="(member, index) in this.invitedMember" :key="index">
+                                <div>
+                                    <div class="invited__member">
+                                        <UsernameComponent :user="member" show-avatar />
+                                    </div>
+                                    <hr class="member__invited__hr" v-if="index < this.invitedMember?.length - 1" />
                                 </div>
                             </div>
-                            <hr class="member__invited__hr" v-if="index < this.invitedLinks.length - 1" />
+                            <hr class="invited__hr" v-if="this.invitedMember?.length > 0" />
+                            <div v-for="(link, index) in this.invitedLinks" :key="index">
+                                <div class="invited__link">
+                                    <UsernameComponent v-if="link.issuer" :user="link.issuer" show-avatar />
+                                    <p :style="{ '-webkit-user-select': 'text' }">{{ link.token }}</p>
+                                    <div class="link__description">
+                                        <p>Used: {{ link.used }}</p>
+                                        <p>Expire: {{ link.expire == -1 ? 'Never' : this.$groups.time_ago(link.timestamp +
+                                            link.expire) }}</p>
+                                    </div>
+                                </div>
+                                <hr class="member__invited__hr" v-if="index < this.invitedLinks.length - 1" />
+                            </div>
+                            <p v-if="this.invitedMember?.length == 0 && this.invitedLinks.length == 0"
+                                :style="{ paddingBottom: '20px' }">Nothing here.</p>
                         </div>
-                        <p v-if="this.invitedMember?.length == 0 && this.invitedLinks.length == 0"
-                            :style="{ paddingBottom: '20px' }">Nothing here.</p>
                     </div>
                 </div>
             </div>
@@ -63,47 +68,11 @@
     <div class="collapsed" v-else>
         <div class="member__header">
             <h3 class="member__title">Member</h3>
-            <i @click="this.searchMember = !this.searchMember"
+            <i v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0" @click="this.searchMember = !this.searchMember"
                 :class="'search__btn bx bx-' + (this.searchMember ? 'minus' : 'plus')" />
         </div>
         <div :class="[searchMember ? 'search__member' : 'n__search__member']">
-            <div class="search__bar">
-                <i class="bx bx-search" />
-                <input class="user__search" type="text" placeholder="Search member" @input="this.isTyping = true"
-                    v-model="this.searchQuery" />
-            </div>
-
-            <div class="search__results">
-                <i v-if="this.isLoading" class="search__member__load bx bx-loader-alt bx-spin" />
-
-                <div class="search__result" v-for="(result, index) in this.searchResult">
-                    <UsernameComponent :user="result" show-avatar />
-                    <button class="invite__btn" @click="createInviteLink(result)">Invite</button>
-                </div>
-                <p v-if="this.searchResult.length === 0 && !isLoading && this.searchQuery">No entry found.</p>
-            </div>
-            <div v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0" class="group__invite"
-                @click="this.setupInviteLink = !this.setupInviteLink">
-                <i class="bx bx-link" />
-                <p>Create invite link</p>
-            </div>
-            <div :class="[setupInviteLink ? 'invite__link' : 'n__invite__link']">
-                <div class="invite__link__expire">
-                    <p>Expire after</p>
-                    <select class="invite__dropdown" id="expire-after-select" v-model="this.expireAfter">
-                        <option v-for="expire in this.expireItems" :value="expire.value">{{ expire.text }}</option>
-                    </select>
-                    <i class="dropdown__icon bx bx-chevron-down" />
-                </div>
-                <div class="invite__link__uses">
-                    <p>Max uses</p>
-                    <select class="invite__dropdown" id="max-uses-select" v-model="this.maxUses">
-                        <option v-for="uses in this.maxUsesItems" :value="uses.value">{{ uses.text }}</option>
-                    </select>
-                    <i class="dropdown__icon bx bx-chevron-down" />
-                </div>
-                <button class="invite__link__btn" @click="createInviteLink()">Generate & Copy</button>
-            </div>
+            <SearchMember :group="this.group" :member="this.member" />
         </div>
         <hr class="search__hr" />
         <div class="member__list">
@@ -114,13 +83,13 @@
 </template>
 
 <script>
-import _ from 'lodash';
 import UsernameComponent from "@/components/UsernameComponent.vue";
 import MemberCard from './MemberCard.vue';
+import SearchMember from './SearchMember.vue';
 
 export default {
     name: "MemberComponent",
-    components: { UsernameComponent, MemberCard },
+    components: { UsernameComponent, MemberCard, SearchMember },
     props: {
         group: {
             type: Object,
@@ -144,33 +113,8 @@ export default {
             invitedLinks: [],
             selectedMember: undefined,
             searchMember: false,
-            searchQuery: undefined,
-            isTyping: false,
-            isLoading: false,
-            searchResult: [],
             loading: false,
             loadingInvited: false,
-            setupInviteLink: false,
-            expireAfter: '30min',
-            maxUses: 0,
-            expireItems: [
-                { value: '30min', text: '30 min', milliseconds: 1800000 },
-                { value: '1h', text: '1 hour', milliseconds: 3600000 },
-                { value: '6h', text: '6 hours', milliseconds: 21600000 },
-                { value: '12h', text: '12 hours', milliseconds: 43200000 },
-                { value: '1d', text: '1 day', milliseconds: 86400000 },
-                { value: '7d', text: '7 days', milliseconds: 604800000 },
-                { value: 'never', text: 'Never', milliseconds: 0 },
-            ],
-            maxUsesItems: [
-                { text: 'No limit', value: 0 },
-                { text: 'One time', value: 1 },
-                { text: '5 times', value: 5 },
-                { text: '10 times', value: 10 },
-                { text: '25 times', value: 25 },
-                { text: '50 times', value: 50 },
-                { text: '100 times', value: 100 },
-            ]
         }
     },
     mounted() {
@@ -221,48 +165,8 @@ export default {
             const user = localStorage.getItem('user');
             if (user === null) return undefined;
             return JSON.parse(user);
-        },
-        searchAccount(input) {
-            this.searchResult = [];
-            if (input === undefined || input === '') {
-                return;
-            }
-            this.isLoading = true;
-            this.$users.search(input).then(result => {
-                this.searchResult = result.filter(account => {
-                    return !this.member.some(member => member.uid === account.uid)
-                });
-                this.isLoading = false;
-            })
-        },
-        createInviteLink(user = undefined) {
-            const expireItem = this.expireItems.find(item => item.value === this.expireAfter);
-            const maxUsesItem = this.maxUsesItems.find(item => item.value === this.maxUses);
-
-            this.$groups.createInvite(this.group.id, expireItem ? expireItem.milliseconds : -1, maxUsesItem ? maxUsesItem.amount : 0, user?.uid).then(invite => {
-                if (user) {
-                    this.$toast.showNotification(`${user.username} has been invited to the group.`);
-                    return
-                }
-                const inviteLink = `https://maximilianwiegmann.com/groups?invlink=${invite.data.token}`;
-                navigator.clipboard.writeText(inviteLink).then(() => {
-                    this.$toast.showNotification('Invite link copied to clipboard');
-                }).catch(() => {
-                    this.$toast.showNotification('Failed to copy invite link to clipboard', 5000, 'error');
-                })
-            })
         }
     },
-    watch: {
-        searchQuery: _.debounce(function () {
-            this.isTyping = false;
-        }, 1000),
-        isTyping: function (value) {
-            if (!value) {
-                this.searchAccount(this.searchQuery);
-            }
-        }
-    }
 }
 </script>
 
@@ -291,40 +195,6 @@ export default {
     padding: 10px 25px;
 }
 
-.search__bar {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 0 25px 25px 25px;
-    gap: 10px;
-}
-
-.search__results {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: 0 25px 30px;
-    gap: 10px;
-    overflow: scroll
-}
-
-.search__result {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    overflow: scroll
-}
-
-.invite__btn {
-    margin-left: auto;
-    background-color: var(--color-blue-mute);
-}
-
-.search__hr {
-    margin: 0 25px 20px 25px;
-    border: 1px solid var(--color-background-soft);
-}
-
 .search__member {
     opacity: 1;
     max-height: 200px;
@@ -334,19 +204,6 @@ export default {
 }
 
 .n__search__member {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-}
-
-.invite__link {
-    opacity: 1;
-    max-height: 200px;
-    overflow: hidden;
-    transition: max-height 0.5s ease;
-}
-
-.n__invite__link {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;
@@ -448,6 +305,8 @@ export default {
     top: 0px;
     align-items: flex-end;
     padding-right: 20px;
+    height: 500px;
+    overflow: scroll;
 }
 
 .member__requests {
@@ -455,8 +314,6 @@ export default {
     border: 1px solid var(--color-background);
     border-radius: 10px;
     width: 35%;
-    max-height: 500px;
-    overflow: scroll;
     margin-top: 20px;
 }
 
@@ -466,7 +323,7 @@ export default {
     border-radius: 10px;
     width: 35%;
     max-height: 500px;
-    overflow: scroll;
+    padding-bottom: 10px;
 }
 
 .member__invited__hr {
@@ -504,6 +361,11 @@ export default {
 
 .invited__body {
     padding-bottom: 20px;
+    transition: 0.5s ease;
+}
+
+.invited__body__s {
+    transition: 0.5s ease;
 }
 
 .invited__hr {
