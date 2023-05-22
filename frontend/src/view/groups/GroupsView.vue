@@ -98,6 +98,11 @@ export default {
             dragged: undefined,
             groupCategories: [
                 {
+                    name: 'Chat',
+                    icon: 'bx bxs-chat',
+                    component: ChatComponent
+                },
+                {
                     name: 'Member',
                     icon: 'bx bxs-user-detail',
                     component: MemberComponent
@@ -106,11 +111,6 @@ export default {
                     name: 'Settings',
                     icon: 'bx bxs-cog',
                     component: SettingsComponent
-                },
-                {
-                    name: 'Chat',
-                    icon: 'bx bxs-cog',
-                    component: ChatComponent
                 },
             ],
             groups: [],

@@ -1,5 +1,9 @@
 export default {
     install: (app) => {
+        var colors = [
+            '#2196F3', '#32c787', '#00BCD4', '#ff5652',
+            '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
+        ];
         const w = {
             getGroupById: async (gId) => {
                 const group = await app.axios.get('/groups/gid/' + gId)
@@ -58,17 +62,19 @@ export default {
                 return null
             },
 
-            getColor: (index) => {
+            /*getColor: (index) => {
                 const hue = index * 30 % 360;
                 const saturation = 55;
                 const lightness = 30;
                 return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-            },
-
-            getColorByMember: (group, uId) => {
-                const index = group.member.findIndex(m => m.id === uId) + 1
-                console.log(uId, index)
-                return w.getColor(index)
+            },*/
+            getAvatarColor: (messageSender) => {
+                var hash = 0;
+                for (var i = 0; i < messageSender.length; i++) {
+                    hash = 31 * hash + messageSender.charCodeAt(i);
+                }
+                var index = Math.abs(hash % colors.length);
+                return colors[index];
             },
 
             createInvite: async (gId, expire, maxUses, receiver) => {
@@ -118,7 +124,7 @@ export default {
                 let seconds = (+new Date() - time) / 1000,
                     token = 'ago',
                     list_choice = 1;
-    
+
                 if (Math.round(seconds) === 0) {
                     return 'Just now'
                 }

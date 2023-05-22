@@ -27,8 +27,6 @@ public class NotificationService {
         notification.setAccountData(accountData);
         notificationRepository.save(notification);
 
-        if (accountData.getNotifications() == null)
-            accountData.setNotifications(new ArrayList<>());
         accountData.getNotifications().add(notification);
         accountRepository.save(accountData);
         return ResponseEntity.ok().build();

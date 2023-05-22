@@ -43,6 +43,7 @@ public class AccountData implements UserDetails {
     private List<Token> tokens;
 
     @DBRef(db = "notifications")
+    @JsonManagedReference
     private List<Notification> notifications;
     
     @DBRef(db = "signinwith")

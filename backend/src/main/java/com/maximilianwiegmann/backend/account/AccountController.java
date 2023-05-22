@@ -39,4 +39,9 @@ public class AccountController {
         return ResponseEntity.ok(service.searchByUsername(username));
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<PublicAccountResponse>> getAllAccountData() {
+        return ResponseEntity.ok(service.findAll());
+    }
+
 }

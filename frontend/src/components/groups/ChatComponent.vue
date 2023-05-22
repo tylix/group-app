@@ -1,16 +1,42 @@
 <template>
     <div class="expanded" v-if="this.expanded">
-        <p>Big Chat</p>
+        <div class="chat__body">
+            <div ref="chat" class="chat__messages">
+                <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
+                <div class="chat__message" v-for="(message, index) in this.messages" :key="index" v-else>
+                    <UsernameComponent class="chat__user" :user="message.name === 'You' ? this.getUser() : message.name"
+                        v-if="index === 0 || this.messages[index - 1].userId !== message.userId"
+                        :style="{ color: this.$groups.getAvatarColor(message.name) }" />
+                    <div>
+                        <div class="chat__line" :style="{ backgroundColor: this.$groups.getAvatarColor(message.name) }" />
+                        <p class="chat__content">{{ message.content }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat__input">
+                <textarea class="chat__textarea" placeholder="Type a message" v-model="this.message"
+                    @keyup.enter.shift="this.sendMessage" />
+                <button class="chat__send" @click="this.sendMessage">Send</button>
+            </div>
+        </div>
     </div>
     <div class="collapsed" v-else>
         <div class="chat__header">
             <h3 class="chat__title">Chat</h3>
         </div>
         <div class="chat__body">
-            <div class="chat__messages">
-                <p v-for="message in this.messages">
-                    {{ message.content }}
-                </p>
+            <div ref="chat" class="chat__messages">
+                <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
+                <div class="chat__message" v-for="(message, index) in this.messages" :key="index" v-else>
+                    <UsernameComponent class="chat__user" :user="message.name === 'You' ? this.getUser() : message.name"
+                        v-if="index === 0 || this.messages[index - 1].userId !== message.userId"
+                        :style="{ color: this.$groups.getAvatarColor(message.name) }" />
+                    <div>
+                        <div class="chat__line" :style="{ backgroundColor: this.$groups.getAvatarColor(message.name) }" />
+                        <p class="chat__content">{{ message.content }}</p>
+                    </div>
+                </div>
             </div>
             <div class="chat__input">
                 <textarea class="chat__textarea" placeholder="Type a message" v-model="this.message"
@@ -64,16 +90,17 @@ export default {
     },
     data() {
         return {
-            stompClient: undefined,
             message: undefined,
             messages: [],
+            loading: false
         }
     },
     mounted() {
-        /*if (this.group) {
+        if (this.group) {
+            this.loading = true
             this.group.messages.forEach(message => {
                 const newMessage = {
-                    content: this.$CryptoJS.AES.decrypt(message.content, import.meta.env.VITE_PUB_KEY).toString(this.$CryptoJS.enc.Utf8),
+                    content: this.decrypt(message.content, import.meta.env.VITE_PUB_KEY).toString(this.$CryptoJS.enc.Utf8),
                     timestamp: message.timestamp,
                     userId: message.userId,
                     name: ''
@@ -81,26 +108,43 @@ export default {
                 if (message.userId === JSON.parse(localStorage.getItem('user')).uid) {
                     newMessage.name = 'You';
                     this.messages.push(newMessage)
-                    this.messages.sort((a, b) => {
-                        return b.timestamp - a.timestamp
-                    })
+                    this.checkMessages()
                 } else {
-                    this.$users.getAccount(message.userId).then(user => {
+                    this.$users.getAcountCached(message.userId).then(user => {
+                        if(user === undefined) return
                         newMessage.name = user;
                         this.messages.push(newMessage)
-                        this.messages.sort((a, b) => {
-                            return b.timestamp - a.timestamp
-                        })
+                        this.checkMessages()
                     });
                 }
             });
-        }*/
+            if(this.group.messages.length === 0) this.loading = false
+        }
+        this.connectionSuccess()
     },
     unmounted() {
     },
     beforeUnmount() {
     },
     methods: {
+        checkMessages() {
+            if (this.group.messages.length === this.messages.length) {
+                this.messages.sort((a, b) => {
+                    return a.timestamp - b.timestamp
+                })
+                this.scrollDown()
+                this.loading = false
+            }
+        },
+        scrollDown() {
+            const chat = this.$refs.chat;
+            this.$nextTick(() => {
+                chat.scrollTop = chat.scrollHeight;
+            });
+        },
+        getUser() {
+            return JSON.parse(localStorage.getItem('user'))
+        },
         connectionSuccess() {
             this.$websocket.subscribeChat(this.group.id, this.onMessageReceived)
         },
@@ -129,15 +173,17 @@ export default {
                     newMessage.name = 'You';
                     this.messages.push(newMessage)
                     this.messages.sort((a, b) => {
-                        return b.timestamp - a.timestamp
+                        return a.timestamp - b.timestamp
                     })
+                    this.scrollDown()
                 } else {
                     this.$users.getAccount(message.userId).then(user => {
                         newMessage.name = user;
                         this.messages.push(newMessage)
                         this.messages.sort((a, b) => {
-                            return b.timestamp - a.timestamp
+                            return a.timestamp - b.timestamp
                         })
+                        this.scrollDown()
                     });
                 }
             }
@@ -155,6 +201,21 @@ export default {
             }
         },
 
+    },
+    watch: {
+        expanded: function (val) {
+            if (val)
+                setTimeout(() => {
+                    this.scrollDown()
+                }, 100)
+            else
+                setTimeout(() => {
+                    this.scrollDown()
+                }, 500);
+        },
+        loading: function (val) {
+            this.scrollDown()
+        }
     }
 }
 </script>
@@ -188,8 +249,19 @@ export default {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 0 25px;
     height: 3rem;
+    gap: 9px;
+}
+
+.chat__input textarea::-webkit-scrollbar {
+    width: 0px;
+    display: none;
+    background: transparent;
+}
+
+.chat__input button {
+    background-color: var(--color-blue-mute);
+    color: var(--color-text);
 }
 
 .chat__textarea {
@@ -209,6 +281,29 @@ export default {
 
 .chat__textarea {
     background-color: var(--color-background-modern-mute);
+}
+
+.chat__line {
+    width: 1px;
+    height: 100%;
+    position: absolute;
+}
+
+.chat__content {
+    margin-left: 10px;
+    width: 95%;
+    line-break: anywhere;
+}
+
+.chat__user {
+    width: 15%;
+}
+
+.chat__messages {
+    max-height: 400px;
+    widows: 100px;
+    overflow: scroll;
+    overflow-x: hidden;
 }
 
 
@@ -285,7 +380,7 @@ export default {
     flex-direction: column-reverse;
 }
 
-.messages::-webkit-scrollbar {
+.chat__messages::-webkit-scrollbar {
     width: 0px;
     background: transparent;
     display: none;

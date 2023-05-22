@@ -220,6 +220,7 @@ public class AuthenticationService {
                                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                                 .firstName(firstName)
                                 .lastName(lastName)
+                                .notifications(new ArrayList<>())
                                 .build();
 
                         account = repository.save(newAccount);
@@ -295,6 +296,7 @@ public class AuthenticationService {
                                 .username(username)
                                 .email(email)
                                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                                .notifications(new ArrayList<>())
                                 .build();
 
                         account = repository.save(newAccount);

@@ -14,6 +14,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import static java.lang.String.format;
 
 @Controller
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class ChatController {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
@@ -47,6 +49,9 @@ public class ChatController {
     public void addUser(@DestinationVariable String roomId, @Payload ChatMessage chatMessage,
                         SimpMessageHeaderAccessor headerAccessor) {
         String currentRoomId = (String) headerAccessor.getSessionAttributes().put("room_id", roomId);
+        GroupData groupData = groupRepository.findById(roomId).orElse(null);
+        if (groupData == null) return;
+        
         if (currentRoomId != null) {
             ChatMessage leaveMessage = new ChatMessage();
             leaveMessage.setType(ChatMessage.MessageType.LEAVE);
