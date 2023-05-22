@@ -16,7 +16,7 @@
                 <p v-else>Confirm</p>
             </button>
         </div>
-        <button class="otp-skip" @click="this.$router.push(localStorage.getItem('redirect') ? localStorage.getItem('redirect') : '/dashboard')">Skip</button>
+        <button class="otp-skip" @click="this.skip()">Skip</button>
     </div>
     <div class="otp" v-else>
         <h3>Enter your OTP</h3>
@@ -91,6 +91,9 @@ export default {
             if (this.otp.length > 3) {
                 this.otp = this.otp.slice(0, 3) + ' ' + this.otp.slice(3, 6);
             }
+        },
+        skip() {
+            this.$router.push(localStorage.getItem('redirect') ? localStorage.getItem('redirect') : '/dashboard')
         }
     },
     created() {
