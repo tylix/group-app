@@ -34,7 +34,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        if(accessor == null) {
+        if (accessor == null) {
             return null;
         }
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
@@ -43,7 +43,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             if (authorizationHeaders != null && !authorizationHeaders.isEmpty()) {
                 String jwt = authorizationHeaders.get(0).replace("Bearer ", "");
 
-                System.out.println(this.jwtService);
                 String username = jwtService.extractUsername(jwt);
                 if (username != null && accessor.getUser() == null) {
                     UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);

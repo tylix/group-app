@@ -83,14 +83,14 @@ export default {
 }
 
 .username-hover {
-    position: fixed;
+    position: absolute;
     background-color: var(--color-background-modern-mute);
     border: 1px solid var(--color-background);
     border-radius: 5px;
     width: 300px;
     height: auto;
     cursor: default;
-    z-index: 1000;
+    z-index: 100;
     display: flex;
     padding: 20px 20px;
 }

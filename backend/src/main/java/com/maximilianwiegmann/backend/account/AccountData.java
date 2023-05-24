@@ -1,5 +1,7 @@
 package com.maximilianwiegmann.backend.account;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.maximilianwiegmann.backend.account.signinwith.SigninWith;
 import com.maximilianwiegmann.backend.notifications.Notification;
@@ -43,11 +45,10 @@ public class AccountData implements UserDetails {
     private List<Token> tokens;
 
     @DBRef(db = "notifications")
-    @JsonManagedReference
     private List<Notification> notifications;
     
     @DBRef(db = "signinwith")
-    @JsonManagedReference
+    @JsonIgnore
     private SigninWith signinWith;
 
     @Override

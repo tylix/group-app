@@ -50,6 +50,7 @@ export default {
                     }
                     app.config.globalProperties.$toast.showNotification('Welcome back, ' + res.username, 2000, 'info')
                     app.config.globalProperties.$websocket.connect()
+                    app.config.globalProperties.$users.loadUser()
                 })
             },
             isOtpEnabled: () => {

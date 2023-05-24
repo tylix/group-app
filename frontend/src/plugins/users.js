@@ -39,13 +39,22 @@ export default {
             },
 
             getAcountCached: async (uId) => {
-                return await users.find(u => u.uid === uId)
+                const user = await users.find(u => u.uid === uId)
+                if (user)
+                    return user
+                const loaded = await w.getAccount(uId)
+                users.push(loaded)
+                return loaded
+            },
+            loadUser() {
+                if (localStorage.getItem('token'))
+                    w.getUser().then(res => {
+                        users.push(...res)
+                    })
             }
         }
 
-        w.getAccounts().then(res => {
-            users.push(...res)
-        })
+        w.loadUser()
 
         app.config.globalProperties.$users = w
     }

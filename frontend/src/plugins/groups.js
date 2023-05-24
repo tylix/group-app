@@ -62,19 +62,17 @@ export default {
                 return null
             },
 
-            /*getColor: (index) => {
-                const hue = index * 30 % 360;
-                const saturation = 55;
-                const lightness = 30;
-                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-            },*/
-            getAvatarColor: (messageSender) => {
-                var hash = 0;
-                for (var i = 0; i < messageSender.length; i++) {
-                    hash = 31 * hash + messageSender.charCodeAt(i);
+            getAvatarColor: (userId) => {
+                if (userId === undefined) {
+                    return '#ff3660'
                 }
-                var index = Math.abs(hash % colors.length);
-                return colors[index];
+                let hash = 0;
+                for (let i = 0; i < userId.length; i++) {
+                    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+                }
+
+                const hexColor = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+                return '#' + '00000'.substring(0, 6 - hexColor.length) + hexColor;
             },
 
             createInvite: async (gId, expire, maxUses, receiver) => {

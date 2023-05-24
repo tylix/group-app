@@ -198,16 +198,24 @@ public class AuthenticationService {
                             .method(RequestMethod.GET)
                             .build().sendRequest());
 
-                    String email = user.getString("email");
+                    System.out.println(user.toString());
+
+                    String email = user.has("email") && user.get("email") != null && user.get("email") instanceof String
+                            ? user.getString("email")
+                            : user.getString("node_id");
                     String username = user.getString("login");
                     int id = user.getInt("id");
                     String avatarUrl = user.getString("avatar_url");
 
-                    System.out.println(user.toString());
-
-                    String[] nameSplit = user.has("name") ? user.getString("name").split(" ") : new String[0];
+                    String[] nameSplit = user.has("name") && user.get("name") != null
+                            && user.get("name") instanceof String
+                                    ? user.getString("name").split(" ")
+                                    : new String[0];
                     String lastName = nameSplit.length > 0 ? nameSplit[nameSplit.length - 1] : "";
-                    String firstName = user.has("name") ? user.getString("name").replace(lastName, "") : "";
+                    String firstName = user.has("name") && user.get("name") != null
+                            && user.get("name") instanceof String
+                                    ? user.getString("name").replace(lastName, "")
+                                    : "";
 
                     var signinWith = signinWithRepository.findByProviderAndProviderId(provider, String.valueOf(id));
                     AccountData account = null;
@@ -266,7 +274,7 @@ public class AuthenticationService {
                             formattedBody.append("&");
                         i++;
                     }
-                    
+
                     JSONObject response = new JSONObject(
                             Request.builder().url("https://discord.com/api/v10/oauth2/token")
                                     .contentType("application/x-www-form-urlencoded").body(formattedBody.toString())
@@ -320,13 +328,15 @@ public class AuthenticationService {
                             .token(jwtToken)
                             .build());
 
-                    /*JSONArray connections = new JSONArray(Request.builder()
-                            .url("https://discord.com/api/users/@me/connections")
-                            .headers(Map.of("Authorization", "Bearer " + accessToken))
-                            .method(RequestMethod.GET)
-                            .build().sendRequest());
-
-                    System.out.println(connections.get(0).toString());*/
+                    /*
+                     * JSONArray connections = new JSONArray(Request.builder()
+                     * .url("https://discord.com/api/users/@me/connections")
+                     * .headers(Map.of("Authorization", "Bearer " + accessToken))
+                     * .method(RequestMethod.GET)
+                     * .build().sendRequest());
+                     * 
+                     * System.out.println(connections.get(0).toString());
+                     */
                 } catch (IOException e) {
                     e.printStackTrace();
                     return ResponseEntity.badRequest().build();

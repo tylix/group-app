@@ -34,7 +34,7 @@
             </div>
             <div :class="this.selectedGroup?.id === group.id ? 'group__expanded' : 'group__list'"
                 v-for="group in this.groups" v-if="!this.loading" :key="group.id" :draggable="true"
-                @dragstart="dragStart(group, $event)" @dragend="dragEnd" @dragover="dragOver" @drop="drop(group)">
+                @dragstart="dragStart(group, $event)" @dragend="dragEnd" @dragover="this.dragOver($event)">
                 <div class="group__header">
                     <img class="group__icon" v-if="group.icon">
                     <i v-else class="group__icon bx bx-group" />
@@ -55,19 +55,20 @@
                 </div>
                 <hr class="header__hr" />
 
-                <div class="group__body" :draggable="true">
+                <div class="group__body">
                     <div v-for="(category, index) in this.groupCategories" :key="index">
                         <div
                             v-if="this.selectedCategory === undefined ? true : this.selectedGroup?.id === group.id ? this.selectedCategory?.name === category?.name : true">
 
                             <component class="group__component" :is="category.component" :group="group"
-                                :expanded="this.selectedGroup?.id === group.id" @update="this.updateGroupSettings" @close="" />
+                                :expanded="this.selectedGroup?.id === group.id" @update="this.updateGroupSettings"
+                                @close="" />
                             <hr class="body__hr"
                                 v-if="this.selectedGroup?.id !== group.id && index !== this.groupCategories.length - 1" />
                         </div>
                     </div>
                 </div>
-                <div class="group__footer">
+                <div class="group__footer" :draggable="true">
                     <i class="group__move bx bx-move" />
                 </div>
             </div>
@@ -152,14 +153,13 @@ export default {
     methods: {
         dragStart(item, event) {
             console.log(event.target.classList)
-            if (event.target.classList.contains('group__move')) {
+            if (event.target.classList.contains('group__footer')) {
                 this.dragged = item;
             } else {
                 event.preventDefault();
             }
         },
         dragEnd() {
-            // jZc7rIJH426RZeIHgaMg
             this.dragged = undefined
         },
         dragOver(event) {
@@ -167,9 +167,9 @@ export default {
         },
         drop(item) {
             if (this.dragged && this.dragged !== item) {
-                const dragIndex = this.items.indexOf(this.dragged);
-                const dropIndex = this.items.indexOf(item);
-                [this.items[dragIndex], this.items[dropIndex]] = [this.items[dropIndex], this.items[dragIndex]];
+                const dragIndex = this.groups.indexOf(this.dragged);
+                const dropIndex = this.groups.indexOf(item);
+                [this.groups[dragIndex], this.groups[dropIndex]] = [this.groups[dropIndex], this.groups[dragIndex]];
             }
         },
         loadGroups() {
@@ -380,10 +380,15 @@ export default {
     margin-top: 10px;
     margin-left: 10px;
     bottom: 10px;
-    right: 10px;
+    right: 25px;
     font-size: 18px;
     position: absolute;
     cursor: grab;
+}
+
+.group__move {
+    cursor: grab;
+    position: fixed;
 }
 
 .group__add {

@@ -7,16 +7,21 @@ export default {
         let stompClient = undefined
         let isConnected = false
 
+        let disconnectSub = undefined
+
         const w = {
             connect() {
-                //const socket = new SockJS('https://api.maximilianwiegmann.com/ws');
-                const socket = new SockJS('http://127.0.0.1:8080/ws');
+                const socket = new SockJS('https://api.maximilianwiegmann.com/ws');
+                //const socket = new SockJS('http://127.0.0.1:8080/ws');
                 stompClient = Stomp.over(socket)
 
                 stompClient.connect({
                     Authorization: 'Bearer ' + localStorage.getItem('token')
                 }, () => {
                     isConnected = true
+                    window.addEventListener('beforeunload', () => {
+                        w.disconnect()
+                    })
                     console.log('Connected')
                 })
             },
@@ -34,8 +39,9 @@ export default {
                 }
             },
 
-            subscribeChat(gId, sub) {
+            subscribeChat(gId, sub, callback, disSub) {
                 if (isConnected) {
+                    disconnectSub = disSub
                     console.log('Subscribing to chat ' + gId)
                     stompClient.subscribe('/channel/' + gId, sub);
                     const uid = JSON.parse(localStorage.getItem('user')).uid;
@@ -43,6 +49,7 @@ export default {
                         userId: uid,
                         type: 'JOIN'
                     }));
+                    callback()
                 } else {
                     console.log('Not connected')
                 }
@@ -58,7 +65,12 @@ export default {
                 if (isConnected) {
                     stompClient.send("/app/chat/" + gId + "/connectedCount", {}, '');
                 }
+            },
+
+            isConnected() {
+                return isConnected
             }
+
         }
 
         app.config.globalProperties.$websocket = w

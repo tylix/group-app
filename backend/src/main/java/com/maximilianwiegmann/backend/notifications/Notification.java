@@ -34,7 +34,5 @@ public class Notification {
     @Default
     private boolean read = false;
 
-    @DBRef(lazy = true)
-    @JsonBackReference
-    private AccountData accountData;
+    private String uId;
 }

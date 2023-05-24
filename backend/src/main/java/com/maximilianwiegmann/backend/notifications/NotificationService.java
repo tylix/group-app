@@ -24,16 +24,13 @@ public class NotificationService {
         AccountData accountData = accountRepository.findById(uid).orElse(null);
         if (accountData == null)
             return ResponseEntity.badRequest().build();
-        notification.setAccountData(accountData);
+        notification.setUId(uid);
         notificationRepository.save(notification);
-
-        accountData.getNotifications().add(notification);
-        accountRepository.save(accountData);
         return ResponseEntity.ok().build();
     }
 
     public List<Notification> getNotifications(AccountData accountData) {
-        return notificationRepository.findByAccountDataId(accountData.getId());
+        return notificationRepository.findByUserId(accountData.getId());
     }
 
 }
