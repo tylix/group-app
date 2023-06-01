@@ -9,5 +9,8 @@ public interface NotificationRepository extends MongoRepository<Notification, St
 
     @Query("{ 'uId' : ?0 }")
     List<Notification> findByUserId(String uId);
-    
+
+    @Query("{ 'uId' : ?0, 'read' : false }")
+    List<Notification> findByUserIdAndNotRead(String uId);
+
 }

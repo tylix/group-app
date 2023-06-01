@@ -55,6 +55,11 @@ export default {
                     name: "Contacts",
                     route: "/contacts",
                     icon: "bx bxs-user-detail",
+                },
+                {
+                    name: 'Admin',
+                    route: '/admin',
+                    icon: 'bx bx-shield-alt'
                 }
             ],
             expanded: false,
@@ -141,6 +146,10 @@ export default {
     font-size: 20px;
 }
 
+.navbar__notification i {
+    cursor: pointer;
+}
+
 .navabar__cright {
     flex: 1;
     display: flex;
@@ -184,7 +193,6 @@ export default {
 .navbar__profile {
     margin: 0 10px;
     font-size: 21px;
-    cursor: pointer;
 }
 
 
@@ -280,7 +288,7 @@ export default {
 .notification__component {
     width: 300px;
     height: 400px;
-    background-color: var(--color-blue-soft);
+    background-color: var(--color-background-modern-mute);
     position: absolute;
     top: 100%;
     right: 0;

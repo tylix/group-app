@@ -29,6 +29,16 @@ export default {
                 return notifications.data
             },
 
+            readAllNotifications: async () => {
+                const request = await app.axios.post('/notifications/readAll')
+                return request.data
+            },
+
+            readNotification: async (nId) => {
+                const request = await app.axios.post('/notifications/read/' + nId)
+                return request.data
+            },
+
             getAccounts: async () => {
                 const accounts = await app.axios.get('/accounts/all')
                 return accounts.data

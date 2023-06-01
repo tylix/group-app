@@ -25,6 +25,10 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    public String extractUId(String token) {
+        return extractClaim(token, claims -> claims.get("uId", String.class));
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
         Claims claims = extractAllClaims(token);
         return claimResolver.apply(claims);
@@ -35,20 +39,26 @@ public class JwtService {
     }
 
     public String generateRegisterToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>() {{
-            put("signup", true);
-        }}, userDetails, 1000 * 60 * 60 * 3);
+        return generateToken(new HashMap<>() {
+            {
+                put("signup", true);
+            }
+        }, userDetails, 1000 * 60 * 60 * 3);
     }
 
     public String generateTfaToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>() {{
-            put("tfa", true);
-        }}, userDetails, 1000 * 60 * 5);
+        return generateToken(new HashMap<>() {
+            {
+                put("tfa", true);
+            }
+        }, userDetails, 1000 * 60 * 5);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         if (((AccountData) userDetails).getTfaSecret() != null)
             extraClaims.put("otp", true);
+        String uId = ((AccountData) userDetails).getId();
+        extraClaims.put("uId", uId);
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
@@ -83,8 +93,8 @@ public class JwtService {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException |
-                 IllegalArgumentException e) {
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException
+                | IllegalArgumentException e) {
             return null;
         }
     }

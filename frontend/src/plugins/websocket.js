@@ -9,6 +9,8 @@ export default {
 
         let disconnectSub = undefined
 
+        let notificationSubs = []
+
         const w = {
             connect() {
                 const socket = new SockJS('https://api.maximilianwiegmann.com/ws');
@@ -22,6 +24,7 @@ export default {
                     window.addEventListener('beforeunload', () => {
                         w.disconnect()
                     })
+                    w.subscribeNotifications()
                     console.log('Connected')
                 })
             },
@@ -33,9 +36,20 @@ export default {
                 }
             },
 
+            registerNotificationSub(sub) {
+                notificationSubs.push(sub)
+            },
+
             subscribeNotifications() {
                 if (isConnected) {
-
+                    stompClient.subscribe(`/notifications/${localStorage.getItem('token')}`, (message) => {
+                        const notification = JSON.parse(message.body)
+                        app.config.globalProperties.$toast.showNotification(notification, 5000)
+                        notificationSubs.forEach(sub => {
+                            sub(notification)
+                        })
+                    });
+                    console.log('subscribeNotifications')
                 }
             },
 

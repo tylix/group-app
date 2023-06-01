@@ -1,5 +1,6 @@
 package com.maximilianwiegmann.backend.notifications;
 
+import org.json.JSONObject;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -29,10 +30,16 @@ public class Notification {
 
     private String title;
     private String body;
-    private long timestamp;
+    @Default
+    private long timestamp = System.currentTimeMillis();
     private String link;
     @Default
     private boolean read = false;
 
     private String uId;
+
+    public String toJson() {
+        return new JSONObject().put("id", id).put("title", title).put("body", body).put("timestamp", timestamp)
+                .put("link", link).put("read", read).toString();
+    }
 }

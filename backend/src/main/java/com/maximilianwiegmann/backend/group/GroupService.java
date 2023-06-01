@@ -7,7 +7,7 @@ import com.maximilianwiegmann.backend.group.data.GroupData;
 import com.maximilianwiegmann.backend.group.data.GroupInvite;
 import com.maximilianwiegmann.backend.group.data.GroupMember;
 import com.maximilianwiegmann.backend.notifications.Notification;
-import com.maximilianwiegmann.backend.notifications.NotificationService;
+import com.maximilianwiegmann.backend.notifications.NotificationHandler;
 import com.maximilianwiegmann.backend.payload.response.GroupResponse;
 import com.mongodb.lang.Nullable;
 
@@ -27,9 +27,8 @@ import java.util.Map;
 public class GroupService {
 
     private final GroupRepository groupRepository;
-    private final AccountRepository accountRepository;
 
-    private final NotificationService notificationService;
+    private final NotificationHandler notificationHandler;
 
     public GroupData getGroup(String id) {
         return groupRepository.findById(id).orElse(null);
@@ -118,7 +117,7 @@ public class GroupService {
         group.updateInvite(invite);
 
         if (invite.getIssuer() != null)
-            notificationService.sendNotification(invite.getIssuer(),
+            notificationHandler.notifyUser(invite.getIssuer(),
                     Notification.builder()
                             .title("Invite code has been used")
                             .body(account.getUsername() + " has used your invite link.")
@@ -160,7 +159,7 @@ public class GroupService {
         groupRepository.save(groupData);
 
         if (reciever != null) {
-            notificationService.sendNotification(reciever,
+            notificationHandler.notifyUser(reciever,
                     Notification.builder()
                             .title("Group Invite")
                             .body("You have been invited to " + groupData.getName())
