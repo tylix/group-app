@@ -22,14 +22,6 @@
                 <hr class="header__hr" />
                 <div class="join__group__member">
                     <MemberComponent :group="this.joinGroup" :expanded="false" :join-preview="true" />
-                    <!--<h4>Members</h4>
-                    <div class="join__group__member__list">
-                        <div class="join__group__member__item" v-for="member in this.joinGroup.member" :key="member.id">
-                            <img class="join__group__member__item__icon" v-if="member.icon" />
-                            <i v-else class="join__group__member__item__icon bx bx-user" />
-                            <h5>{{ member }}</h5>
-                        </div>
-                    </div>-->
                 </div>
             </div>
             <div :class="this.selectedGroup?.id === group.id ? 'group__expanded' : 'group__list'"
@@ -81,10 +73,11 @@
 </template>
 
 <script>
-import MemberComponent from "@/components/groups/MemberComponent.vue";
+import MemberComponent from "@/components/groups/member/MemberComponent.vue";
 import ChatComponent from "@/components/groups/ChatComponent.vue";
 import CreateGroupComponent from "@/components/groups/CreateGroupComponent.vue";
 import SettingsComponent from "@/components/groups/SettingsComponent.vue";
+import CalendarComponent from "@/components/groups/calendar/CalendarComponent.vue";
 
 export default {
     name: "GroupsView",
@@ -109,6 +102,15 @@ export default {
                     component: MemberComponent
                 },
                 {
+                    name: 'Lists',
+                    icon: 'bx bxs-list-ul',
+                },
+                {
+                    name: 'Calendar',
+                    icon: 'bx bxs-calendar',
+                    component: CalendarComponent
+                },
+                {
                     name: 'Settings',
                     icon: 'bx bxs-cog',
                     component: SettingsComponent
@@ -126,23 +128,7 @@ export default {
         }
     },*/
     mounted() {
-        this.invlink = this.$route.query.invlink
-        if (this.invlink) {
-            this.$groups.getGroupByInviteLink(this.invlink).then(group => {
-                if (group.settingMap.requireTfa && !this.$auth.isOtpEnabled) {
-                    this.$toast.showNotification(`You need to enable 2FA to join this group!`, 5000, 'error')
-                    return
-                }
-                this.joinGroup = group
-            }).catch(err => {
-                console.log(err)
-                this.clearRoute()
-                if (err.response.status === 409)
-                    this.$toast.showNotification(`You are already a member of this group!`, 5000, 'error')
-                if (err.response.status === 404)
-                    this.$toast.showNotification(`This token is invalid!`, 5000, 'error')
-            })
-        }
+        this.checkInvLink()
         this.loadGroups()
         /*if(this.id) {
             this.$groups.getGroupById(this.id).then(group => {
@@ -150,7 +136,31 @@ export default {
             })
         }*/
     },
+    updated() {
+        setTimeout(() => {
+            this.checkInvLink()
+        }, 200)
+    },
     methods: {
+        checkInvLink() {
+            this.invlink = this.$route.query.invlink
+            if (this.invlink) {
+                this.$groups.getGroupByInviteLink(this.invlink).then(group => {
+                    if (group.settingMap.requireTfa && !this.$auth.isOtpEnabled) {
+                        this.$toast.showNotification(`You need to enable 2FA to join this group!`, 5000, 'error')
+                        return
+                    }
+                    this.joinGroup = group
+                }).catch(err => {
+                    console.log(err)
+                    this.clearRoute()
+                    if (err.response.status === 409)
+                        this.$toast.showNotification(`You are already a member of this group!`, 5000, 'error')
+                    if (err.response.status === 404)
+                        this.$toast.showNotification(`This token is invalid!`, 5000, 'error')
+                })
+            }
+        },
         dragStart(item, event) {
             console.log(event.target.classList)
             if (event.target.classList.contains('group__footer')) {
@@ -202,6 +212,7 @@ export default {
         },
         cancelJoin() {
             this.joinGroup = false
+            this.invlink = undefined
             this.clearRoute()
         },
         joinGroupByLink() {
