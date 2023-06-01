@@ -19,11 +19,11 @@ public class AuthenticationController {
 
     private final AuthenticationService service;
 
-
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         AuthenticationResponse response = service.register(request);
-        if (response == null) return ResponseEntity.badRequest().build();
+        if (response == null)
+            return ResponseEntity.badRequest().build();
         return ResponseEntity.ok(response);
     }
 

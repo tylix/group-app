@@ -198,8 +198,6 @@ public class AuthenticationService {
                             .method(RequestMethod.GET)
                             .build().sendRequest());
 
-                    System.out.println(user.toString());
-
                     String email = user.has("email") && user.get("email") != null && user.get("email") instanceof String
                             ? user.getString("email")
                             : user.getString("node_id");

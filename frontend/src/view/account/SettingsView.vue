@@ -15,7 +15,6 @@
                         <p>{{ item.name }}</p>
 
 
-
                         <input v-model="item.model" :type="item.data.inputType ? item.data.inputType : 'text'" v-if="item.type === 'input'"/>
 
                         <button v-else-if="item.type === 'button'" :style="{ backgroundColor: item.data.color }"
@@ -25,77 +24,99 @@
 
                         <component class="component" :is="item.data.path" v-else-if="item.type === 'component'"/>
 
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <ConfirmComponent v-if="this.confirm" @confirm="this.confirm = undefined" @cancel="this.confirm = undefined"/>
 </template>
 
 <script>
 import TwoFactorSettingComponent from "@/components/settings/TwoFactorSettingComponent.vue";
+import ConfirmComponent from "../../components/ConfirmComponent.vue";
 export default {
     name: "SettingsView",
     data() {
         return {
             categories: [
-                'Profile',
-                'Chat',
-                'Security',
-                'Advanced',
+                "Profile",
+                "Chat",
+                "Security",
+                "Advanced",
             ],
+            confirm: undefined,
             expandedCategories: [],
             items: [
                 {
-                    name: 'Username',
-                    type: 'input',
+                    name: "Username",
+                    type: "input",
                     category: 0,
-                    model: JSON.parse(localStorage.getItem('user')).username,
+                    model: JSON.parse(localStorage.getItem("user")).username,
                     data: {
-                        inputType: 'text'
+                        inputType: "text"
                     }
                 },
                 {
-                    name: 'First Name',
-                    type: 'input',
+                    name: "First Name",
+                    type: "input",
                     category: 0,
-                    model: JSON.parse(localStorage.getItem('user')).firstName,
+                    model: JSON.parse(localStorage.getItem("user")).firstName,
                     data: {
-                        inputType: 'text'
+                        inputType: "text"
                     }
                 },
                 {
-                    name: 'Last Name',
-                    type: 'input',
+                    name: "Last Name",
+                    type: "input",
                     category: 0,
-                    model: JSON.parse(localStorage.getItem('user')).lastName,
+                    model: JSON.parse(localStorage.getItem("user")).lastName,
                     data: {
-                        inputType: 'text'
+                        inputType: "text"
                     }
                 },
                 {
-                    name: 'Two Factor',
-                    type: 'component',
+                    name: "Two Factor",
+                    type: "component",
                     category: 2,
                     data: {
                         path: TwoFactorSettingComponent
                     }
+                },
+                {
+                    name: "Delete Account",
+                    type: "button",
+                    category: 3,
+                    data: {
+                        text: "Delete",
+                        color: "red"
+                    }
                 }
             ]
-        }
+        };
     },
     methods: {
         getItems(index) {
-            return this.items.filter(item => item.category === index)
+            return this.items.filter(item => item.category === index);
         },
         test() {
-            this.$toast.showNotification('Test', 5000, 'info')
+            this.$toast.showNotification("Test", 5000, "info");
+        },
+        button(item) {
+            if (item.name === "Delete Account") {
+                this.confirm = this.confirm ? undefined : 'delete'
+            }
+        },
+        confirmAction() {
+            if(this.confirm === 'delete') {
+
+            }
         }
     },
     mounted() {
-        this.expandedCategories = this.categories.map(() => true)
-    }
+        this.expandedCategories = this.categories.map(() => true);
+    },
+    components: { ConfirmComponent }
 }
 </script>
 

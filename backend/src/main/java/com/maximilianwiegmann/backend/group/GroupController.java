@@ -122,7 +122,6 @@ public class GroupController {
         GroupMember groupMember = groupData.getMember().stream().filter(member -> member.getId().equals(accountData.getId())).findFirst().orElse(null);
         if (groupMember == null) return ResponseEntity.status(403).build();
 
-        System.out.println(groupMember.getRole());
         if (groupMember.getRole() != GroupMember.ROLE_OWNER && groupMember.getRole() != GroupMember.ROLE_ADMIN) return ResponseEntity.status(403).build();
 
         return groupService.createInviteLink(gId, invite.getExpire(), invite.getReceiver(), invite.getMaxUses(), accountData.getId());
@@ -138,7 +137,7 @@ public class GroupController {
 
         GroupMember groupMember = groupData.getMember().stream().filter(member -> member.getId().equals(accountData.getId())).findFirst().orElse(null);
         if (groupMember != null) return ResponseEntity.status(409).build();
-     
+
         return ResponseEntity.ok(groupData.toResponse().toPublicResponse());
     }
 
