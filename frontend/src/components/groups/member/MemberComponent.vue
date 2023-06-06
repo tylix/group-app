@@ -13,7 +13,7 @@
         <div class="emember__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
             <UsernameComponent v-for="member in this.member" :user="member" show-avatar direction="column"
-                :custom-card="this.customCardComponent" />
+                :custom-card="this.customCardComponent" online-status />
         </div>
         <div class="member__right__side">
             <div class="member__invited">

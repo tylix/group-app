@@ -54,7 +54,7 @@
 
                             <component class="group__component" :is="category.component" :group="group"
                                 :expanded="this.selectedGroup?.id === group.id" @update="this.updateGroupSettings"
-                                @close="" />
+                                @close="this.loadGroups" />
                             <hr class="body__hr"
                                 v-if="this.selectedGroup?.id !== group.id && index !== this.groupCategories.length - 1" />
                         </div>

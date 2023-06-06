@@ -1,5 +1,8 @@
 <template>
-    <div class="notify__body">
+    <p @click="this.showNotifications = !this.showNotifications" class="bell__number"
+        v-if="this.getUnreadNotifications() > 0">{{ this.getUnreadNotifications() }}</p>
+        <div class="notifications" v-if="this.show">
+    <div class="notify__body" v-if="this.show">
         <p class="read__all" @click="this.readAll()">Read all</p>
         <i v-if="!this.notifications" class="loader bx bx-loader-alt bx-spin" />
         <div class="notifications" v-else>
@@ -18,6 +21,7 @@
             </div>
         </div>
     </div>
+        </div>
 </template>
 
 <script>
@@ -29,13 +33,19 @@ export default {
             selectedNotification: undefined
         }
     },
+    props: {
+        show: {
+            type: Boolean,
+            required: true
+        }
+    },
     methods: {
         readAll() {
             this.$users.readAllNotifications().then(res => {
                 this.notifications = res.body
-                    this.notifications.sort((a, b) => {
-                        return b.timestamp > a.timestamp
-                    })
+                this.notifications.sort((a, b) => {
+                    return b.timestamp > a.timestamp
+                })
             })
         },
 
@@ -48,14 +58,19 @@ export default {
                         return b.timestamp > a.timestamp
                     })
                 })
+        },
+        getUnreadNotifications() {
+            if(!this.notifications) return 0
+            const length = this.notifications.filter(n => n.read === false).length;
+            return length;
         }
     },
     mounted() {
         this.$users.getNotifications().then(res => {
             this.notifications = res
-                    this.notifications.sort((a, b) => {
-                        return b.timestamp > a.timestamp
-                    })
+            this.notifications.sort((a, b) => {
+                return b.timestamp > a.timestamp
+            })
         })
         this.$websocket.registerNotificationSub((notification) => {
             this.notifications.unshift(notification)
@@ -66,8 +81,16 @@ export default {
 
 <style>
 .notifications {
+    width: 300px;
+    height: 400px;
+    background-color: var(--color-background-modern-mute);
+    position: fixed;
+    right: 5%;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    z-index: 1000;
     overflow-y: scroll;
-    height: 100%;
 }
 
 .loader {
@@ -145,5 +168,6 @@ export default {
     font-weight: bold;
     margin-bottom: 10px;
     cursor: pointer;
+    position: fixed;
 }
 </style>

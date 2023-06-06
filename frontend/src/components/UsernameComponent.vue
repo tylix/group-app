@@ -3,7 +3,9 @@
         <div class="name" @click="this.redirect()" :style="{ 'flex-direction': this.direction }">
             <img v-if="this.showAvatar" alt="avatar"
                 :src="this.user.avatar ? 'data:image/jpeg;base64, ' + this.user.avatar : '/default.png'" />
-            <i v-if="this.onlineStatus" class="member__dot" />
+            <i v-if="this.onlineStatus" class="member__dot" :style="{
+                backgroundColor: this.status === 0 ? 'var(--color-red)' : 'var(--color-green)'
+            }" />
             <p v-if="this.showName">{{ this.fullName ? this.user.firstName + ' ' + this.user.lastName :
                 this.user.username }}</p>
         </div>
@@ -21,6 +23,8 @@
 </template>
 
 <script>
+import { onUnmounted } from 'vue'
+
 export default {
     name: "UsernameComponent",
     props: {
@@ -56,7 +60,9 @@ export default {
     data() {
         return {
             hover: false,
-            timer: undefined
+            timer: undefined,
+            status: undefined,
+            interval: undefined
         }
     },
     methods: {
@@ -73,7 +79,19 @@ export default {
         redirect() {
             this.$router.push('/account/' + this.user.username)
         }
+    },
+    mounted() {
+        this.status = this.user.status
+        this.interval = setInterval(() => {
+            this.$users.getStatus(this.user.uid).then(res => {
+                this.status = res
+            })
+        }, 10 * 1000)
+    },
+    beforeDestroy() {
+        clearInterval(this.interval)
     }
+    
 }
 </script>
 
@@ -131,7 +149,6 @@ export default {
     display: inline-block;
     width: 10px;
     height: 10px;
-    background-color: var(--color-green);
     box-shadow: 0 0 0 3px var(--color-background-modern);
     border-radius: 90%;
     position: absolute;

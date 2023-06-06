@@ -12,12 +12,11 @@
         <div :class="this.expanded ? 'navbar__right_hide' : 'navbar__right'">
             <div class="navbar__notification">
                 <i @click="this.showNotifications = !this.showNotifications" class="bx bx-bell"></i>
-                <p @click="this.showNotifications = !this.showNotifications" class="bell__number" v-if="this.getUnreadNotifications() > 0">{{ this.getUnreadNotifications() }}</p>
-
-                <NotificationComponent class="notification__component" v-if="this.showNotifications" />
+               
+                <NotificationComponent class="notification__component" :show="showNotifications" />
             </div>
             <div class="navbar__profile">
-                <img src="/default.png" alt="Avatar" @click="this.dropdownOpen = !this.dropdownOpen" />
+                <img :src="getUser().avatar ? 'data:image/png;base64,' + getUser().avatar : '/default.png'" alt="Avatar" @click="this.dropdownOpen = !this.dropdownOpen" />
                 <div class="navbar__dropdown" v-if="dropdownOpen">
                     <p class="navbar__dropdown__title">Welcome, {{ this.getUser().username }}</p>
                     <a @click="this.clickProfile()">My Profile</a>
@@ -78,11 +77,6 @@ export default {
         expand() {
             this.expanded = !this.expanded;
         },
-        getUnreadNotifications() {
-            const length = this.notifications.filter(n => n.read === false).length;
-            console.log(length);
-            return length;
-        }
     },
     mounted() {
         if (this.getUser())
@@ -289,9 +283,9 @@ export default {
     width: 300px;
     height: 400px;
     background-color: var(--color-background-modern-mute);
-    position: absolute;
+    position: fixed;
     top: 100%;
-    right: 0;
+    left: 50%;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 10px;

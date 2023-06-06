@@ -1,7 +1,7 @@
 <template>
     <div class="profile" v-if="this.user">
         <div class="left-side">
-            <img alt="avatar" :src="this.user.avatar ? this.user.avatar : '/default.png'"/>
+            <img alt="avatar" :src="this.user.avatar ? 'data:image/png;base64,' + this.user.avatar : '/default.png'"/>
             <h1>{{ this.user.username }}</h1>
             <p>{{ this.user.firstName }} {{ this.user.lastName }}</p>
 

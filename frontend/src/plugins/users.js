@@ -39,6 +39,11 @@ export default {
                 return request.data
             },
 
+            getStatus: async (uId) => {
+                const status = await app.axios.get('/accounts/status/' + uId)
+                return status.data  
+            },
+
             getAccounts: async () => {
                 const accounts = await app.axios.get('/accounts/all')
                 return accounts.data

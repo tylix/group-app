@@ -14,6 +14,12 @@ export default defineComponent({
     methods: {
         existUser() {
             return localStorage.getItem('user') !== null
+        },
+        isTokenExpires() {
+            const token = localStorage.getItem('token')
+            if (token === null) return true
+            const payload = JSON.parse(atob(token.split('.')[1]))
+            return payload.exp < Date.now() / 1000
         }
     },
     updated() {
@@ -23,7 +29,7 @@ export default defineComponent({
         this.$websocket.disconnect()
     },
     mounted() {
-        if(localStorage.getItem('token') !== null)
+        if(localStorage.getItem('token') !== null && !this.isTokenExpires())
             this.$websocket.connect()
 
         this.sidebar = localStorage.getItem('token') !== null
