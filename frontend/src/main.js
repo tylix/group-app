@@ -7,13 +7,13 @@ import users from "@/plugins/users";
 import groups from "@/plugins/groups";
 import toast from "@/plugins/toast";
 import websocket from "@/plugins/websocket";
+import stats from '@/plugins/stats';
 
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import VueCryptojs from 'vue-cryptojs/src'
 
 import './assets/main.css'
-
 
 export const app = createApp(App)
 
@@ -36,6 +36,7 @@ app.use(groups)
 app.use(toast)
 app.use(websocket)
 app.use(VueCryptojs)
+app.use(stats)
 
 router.isReady().then(() => {
     app.mount('#app')
