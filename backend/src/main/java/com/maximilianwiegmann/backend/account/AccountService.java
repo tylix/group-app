@@ -1,5 +1,6 @@
 package com.maximilianwiegmann.backend.account;
 
+import com.maximilianwiegmann.backend.notifications.NotificationHandler;
 import com.maximilianwiegmann.backend.payload.response.PublicAccountResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccountService {
     private final AccountRepository repository;
+    private final NotificationHandler notificationHandler;
+
+    public int getStatus(String uId) {
+        return notificationHandler.getStatus(uId);
+    }
+
+    public List<AccountData> getAccounts(long from, long to) {
+        return repository.findByFromTo(from, to, "timestamp");
+    }
 
     public List<PublicAccountResponse> findAll() {
         return repository.findAllBy().map(account -> PublicAccountResponse.builder()
@@ -18,7 +28,8 @@ public class AccountService {
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
                 .email(account.getEmail())
-                .avatar(null)
+                .status(notificationHandler.getStatus(account.getId()))
+                .avatar(account.getAvatar())
                 .build()).toList();
     }
 
@@ -29,7 +40,8 @@ public class AccountService {
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
                 .email(account.getEmail())
-                .avatar(null)
+                .avatar(account.getAvatar())
+                .status(notificationHandler.getStatus(account.getId()))
                 .build()).toList();
     }
 
@@ -40,7 +52,8 @@ public class AccountService {
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
                 .email(account.getEmail())
-                .avatar(null)
+                .avatar(account.getAvatar())
+                .status(notificationHandler.getStatus(account.getId()))
                 .build()).orElse(null);
     }
 
@@ -60,7 +73,8 @@ public class AccountService {
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
                 .email(account.getEmail())
-                .avatar(null)
+                .avatar(account.getAvatar())
+                .status(notificationHandler.getStatus(account.getId()))
                 .build()).orElse(null);
     }
 }

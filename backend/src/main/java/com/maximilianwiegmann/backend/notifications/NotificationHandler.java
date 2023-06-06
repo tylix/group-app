@@ -39,6 +39,15 @@ public class NotificationHandler extends TextWebSocketHandler {
     private final SimpUserRegistry userRegistry;
     private final JwtService jwtService;
 
+    public int getStatus(String uId) {
+        SimpUser user = findByUId(uId);
+        return user == null ? 0 : 1;
+    }
+
+    public List<Notification> getNotifications(long from, long to) {
+        return notificationRepository.findByFromTo(from, to, "timestamp");
+    }
+
     public void notifyUser(String uid, Notification notification) {
         AccountData accountData = accountRepository.findById(uid).orElse(null);
         if (accountData == null)
@@ -46,15 +55,18 @@ public class NotificationHandler extends TextWebSocketHandler {
         notification.setUId(uid);
         notificationRepository.save(notification);
         
-        SimpUser user = userRegistry.getUsers().stream().filter(entry -> {
-            String id = jwtService.extractUId(entry.getName());
-            return id != null && id.equals(uid);
-        }).findFirst().orElse(null);
-
+        SimpUser user = findByUId(uid);
         if (user == null)
             return;
 
         messagingTemplate.convertAndSend("/notifications/" + user.getName(), notification.toJson());
+    }
+
+    private SimpUser findByUId(String uId) {
+        return userRegistry.getUsers().stream().filter(entry -> {
+            String id = jwtService.extractUId(entry.getName());
+            return id != null && id.equals(uId);
+        }).findFirst().orElse(null);
     }
     
     public void notifyAll(Notification notification) {

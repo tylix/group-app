@@ -35,8 +35,12 @@ public class AccountData implements UserDetails {
 
     private String password;
     private String email;
+    private String avatar;
 
     private String tfaSecret;
+
+    @Default
+    private long timestamp = System.currentTimeMillis();
 
     @Default
     private boolean enabled = true;

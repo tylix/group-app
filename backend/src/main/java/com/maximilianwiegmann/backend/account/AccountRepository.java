@@ -3,11 +3,15 @@ package com.maximilianwiegmann.backend.account;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.retry.stats.StatisticsRepository;
 
+import com.maximilianwiegmann.backend.statistics.StatisticRepository;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface AccountRepository extends MongoRepository<AccountData, String> {
+public interface AccountRepository extends MongoRepository<AccountData, String>, StatisticRepository<AccountData> {
 
     Stream<AccountData> findAllBy();
 

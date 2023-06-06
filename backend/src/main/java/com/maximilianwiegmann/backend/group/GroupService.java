@@ -3,6 +3,7 @@ package com.maximilianwiegmann.backend.group;
 import com.maximilianwiegmann.backend.BackendApplication;
 import com.maximilianwiegmann.backend.account.AccountData;
 import com.maximilianwiegmann.backend.account.AccountRepository;
+import com.maximilianwiegmann.backend.chat.ChatMessage;
 import com.maximilianwiegmann.backend.group.data.GroupData;
 import com.maximilianwiegmann.backend.group.data.GroupInvite;
 import com.maximilianwiegmann.backend.group.data.GroupMember;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +29,20 @@ import java.util.Map;
 public class GroupService {
 
     private final GroupRepository groupRepository;
-
+    private final SimpMessageSendingOperations messagingTemplate;
     private final NotificationHandler notificationHandler;
 
     public GroupData getGroup(String id) {
         return groupRepository.findById(id).orElse(null);
+    }
+
+    public List<GroupData> getGroups(long from, long to) {
+        return groupRepository.findByFromTo(from, to, "created");
+    }
+
+    public List<ChatMessage> getMessages(long from, long to) {
+        List<GroupData> groups = groupRepository.findByFromTo(from, to, "created");
+        return groups.stream().map(GroupData::getMessages).flatMap(List::stream).toList();
     }
 
     public GroupResponse createGroup(GroupData groupData) {
@@ -205,6 +216,10 @@ public class GroupService {
     public boolean deleteGroup(String gid) {
         if (!groupRepository.existsById(gid))
             return false;
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setType(ChatMessage.MessageType.DELETE);
+
+        messagingTemplate.convertAndSend(String.format("/channel/%s", gid), chatMessage);
         groupRepository.deleteById(gid);
         return true;
     }
