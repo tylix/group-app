@@ -11,6 +11,14 @@
             </div>
 
             <button @click="this.loadStats()">Update</button>
+
+            <div>
+                <button v-for="(item, index) in this.period.chartPeriods" :key="index"
+                    @click="{ this.period.chartPeriod = index; this.loadStats() }"
+                    :style="{ backgroundColor: index === this.period.chartPeriod ? 'var(--color-background-soft)' : 'var(--color-background)' }">
+                    {{ item }}
+                </button>
+            </div>
         </div>
 
         <div>
@@ -58,7 +66,14 @@ export default {
             ],
             period: {
                 from: 1686044630569,
-                to: new Date().getTime()
+                to: new Date().getTime(),
+                chartPeriod: 0,
+                chartPeriods: [
+                    'Monthly',
+                    'Weekly',
+                    'Daily',
+                    'Hourly'
+                ]
             },
             charts: {},
             loading: true
@@ -124,25 +139,26 @@ export default {
 
                         stat.data.forEach(data => {
                             const timestamp = data.timestamp
-                            const month = new Date(timestamp).getMonth()
+                            const lable = this.period.chartPeriod === 0 ? new Date(timestamp).getMonth() : this.period.chartPeriod === 2 ? new Date(timestamp).getDate() : new Date(timestamp).getFullYear()
 
                             if (!statsObject[index])
                                 statsObject[index] = []
 
-                            if (statsObject[index][month])
-                                statsObject[index][month].push(data)
+                            if (statsObject[index][lable])
+                                statsObject[index][lable].push(data)
                             else
-                                statsObject[index][month] = [data]
+                                statsObject[index][lable] = [data]
                         })
 
                         statsObject.forEach((object, itemIndex) => {
                             if (object)
                                 object.forEach((data, index) => {
-                                    const month = months[index]
+                                    const lable = this.period.chartPeriod === 0 ? months[index] : this.period.chartPeriod === 2 ? `${index}.` : 0
                                     const groups = data.length
 
-                                    if (!this.charts[item.name].chartData.labels.includes(month))
-                                        this.charts[item.name].chartData.labels.push(month)
+                                    if (!this.charts[item.name].chartData.labels.includes(lable))
+                                        this.charts[item.name].chartData.labels.push(lable)
+
                                     this.charts[item.name].chartData.datasets[itemIndex].data.push(groups)
 
                                     statsObject[itemIndex][index] = []

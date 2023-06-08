@@ -91,7 +91,6 @@ export default {
 }
 
 .trends {
-    border: 1px solid red;
     font-size: 11px;
     display: flex;
     justify-content: space-between;
@@ -101,7 +100,8 @@ export default {
 }
 
 .trend-card {
-    border: 2px solid var(--color-background-modern-mute);
+    border: 2px solid var(--color-background);
+    background-color: var(--color-background-modern-mute);
     border-radius: 5px;
     width: 50%;
     margin-left: 10px;
