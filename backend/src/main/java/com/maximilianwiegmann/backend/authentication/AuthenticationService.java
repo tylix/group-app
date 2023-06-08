@@ -73,7 +73,8 @@ public class AuthenticationService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
-                .notifications(new ArrayList<>())
+                .contacts(new ArrayList<>())
+                .contactRequests(new ArrayList<>())
                 .build();
         var savedUser = repository.save(account);
         var jwtToken = jwtService.generateRegisterToken(account);
@@ -218,7 +219,7 @@ public class AuthenticationService {
                     var signinWith = signinWithRepository.findByProviderAndProviderId(provider, String.valueOf(id));
                     AccountData account = null;
                     if (signinWith.isPresent()) {
-                        account = repository.findBySigninWithProviderId(signinWith.get().getId()).orElseThrow();
+                        account = repository.findById(signinWith.get().getUId()).orElseThrow();
                     } else {
                         var newAccount = AccountData.builder()
                                 .username(username)
@@ -226,18 +227,17 @@ public class AuthenticationService {
                                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                                 .firstName(firstName)
                                 .lastName(lastName)
-                                .notifications(new ArrayList<>())
+                                .contacts(new ArrayList<>())
+                                .contactRequests(new ArrayList<>())
                                 .build();
 
                         account = repository.save(newAccount);
 
                         SigninWith signInWith = SigninWith.builder().provider(provider)
-                                .providerId(String.valueOf(id)).accountData(account)
+                                .providerId(String.valueOf(id)).uId(account.getId())
                                 .build();
 
                         signinWithRepository.save(signInWith);
-                        account.setSigninWith(signInWith);
-                        repository.save(account);
                     }
 
                     if (account == null)
@@ -296,24 +296,23 @@ public class AuthenticationService {
                     var signinWith = signinWithRepository.findByProviderAndProviderId(provider, id);
                     AccountData account = null;
                     if (signinWith.isPresent()) {
-                        account = repository.findBySigninWithProviderId(signinWith.get().getId()).orElseThrow();
+                        account = repository.findById(signinWith.get().getUId()).orElseThrow();
                     } else {
                         var newAccount = AccountData.builder()
                                 .username(username)
                                 .email(email)
                                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                                .notifications(new ArrayList<>())
+                                .contacts(new ArrayList<>())
+                                .contactRequests(new ArrayList<>())
                                 .build();
 
                         account = repository.save(newAccount);
 
                         SigninWith signInWith = SigninWith.builder().provider(provider)
-                                .providerId(id).accountData(account)
+                                .providerId(id).uId(account.getId())
                                 .build();
 
                         signinWithRepository.save(signInWith);
-                        account.setSigninWith(signInWith);
-                        repository.save(account);
                     }
 
                     if (account == null)

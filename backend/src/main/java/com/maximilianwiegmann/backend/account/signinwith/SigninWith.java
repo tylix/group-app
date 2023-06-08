@@ -29,8 +29,6 @@ public class SigninWith {
     private String provider;
     private String providerId;
 
-    @DBRef(lazy = true)
-    @JsonBackReference
-    private AccountData accountData;
+    private String uId;
     
 }

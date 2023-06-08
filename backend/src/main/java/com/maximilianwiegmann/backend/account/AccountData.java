@@ -3,6 +3,7 @@ package com.maximilianwiegmann.backend.account;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.maximilianwiegmann.backend.account.contacts.ContactData;
 import com.maximilianwiegmann.backend.account.signinwith.SigninWith;
 import com.maximilianwiegmann.backend.notifications.Notification;
 import com.maximilianwiegmann.backend.security.token.Token;
@@ -12,6 +13,7 @@ import lombok.Builder.Default;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.security.access.method.P;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -39,6 +41,9 @@ public class AccountData implements UserDetails {
 
     private String tfaSecret;
 
+    private List<ContactData> contacts;
+    private List<ContactData> contactRequests;
+
     @Default
     private long timestamp = System.currentTimeMillis();
 
@@ -47,13 +52,6 @@ public class AccountData implements UserDetails {
 
     @DBRef(db = "tokens")
     private List<Token> tokens;
-
-    @DBRef(db = "notifications")
-    private List<Notification> notifications;
-    
-    @DBRef(db = "signinwith")
-    @JsonIgnore
-    private SigninWith signinWith;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

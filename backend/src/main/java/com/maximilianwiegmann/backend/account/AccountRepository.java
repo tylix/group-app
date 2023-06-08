@@ -19,9 +19,6 @@ public interface AccountRepository extends MongoRepository<AccountData, String>,
 
     Optional<AccountData> findByEmail(String email);
 
-    @Query("{ 'signinWith.id': ?0 }")
-    Optional<AccountData> findBySigninWithProviderId(String providerId);
-
     @Query("{ $or: [ { 'username': { $regex: '?0', $options: 'i' } }, { 'firstName': { $regex: '?0', $options: 'i' } } ] }")
     Stream<AccountData> findAllByUsernameContains(String username);
 
