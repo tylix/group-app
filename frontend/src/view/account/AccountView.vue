@@ -4,10 +4,10 @@
             <img alt="avatar" :src="this.user.avatar ? 'data:image/png;base64,' + this.user.avatar : '/default.png'"/>
             <h1>{{ this.user.username }}</h1>
             <p>{{ this.user.firstName }} {{ this.user.lastName }}</p>
-
+            <p>{{ this.user.uid }}</p>
         </div>
         <div class="right-side">
-            <button v-if="!this.isSelf">Invite as Friend</button>
+            <button v-if="!this.isSelf" @click="this.$users.sendRequest(this.user.uid)">Invite as Friend</button>
         </div>
     </div>
     <div v-else>
@@ -34,7 +34,7 @@ export default {
         this.loadUser()
     },
     updated() {
-        if (this.isSelf && this.user !== JSON.parse(localStorage.getItem('user')) || !this.isSelf && this.user?.username !== this.username)
+        if (this.isSelf && this.user.uid !== JSON.parse(localStorage.getItem('user')).uid || !this.isSelf && this.user?.username !== this.username)
             this.loadUser()
     },
     methods: {

@@ -19,7 +19,7 @@
                 <input id="password" type="password" @keyup.enter="this.signup()" v-model="this.confirmPassword">
             </div>
             <button @click="this.signup()">
-                <i class="spin bx bx-loader bx-spin" v-if="this.loading"/>
+                <i class="spin bx bx-loader bx-spin" v-if="this.loading" />
                 <p v-else>Signup</p>
             </button>
         </div>
@@ -55,9 +55,19 @@ export default {
             this.loading = true
             this.$auth.signup(this.username, this.password, this.email).then(() => {
                 this.loading = false
-            }).catch(() => {
+            }).catch((err) => {
+                switch (err.response.status) {
+                    case 400:
+                        this.$toast.showNotification('Username or Email already taken.', 5000, 'error')
+                        break
+                    case 406:
+                        this.$toast.showNotification('The password should meet the following criteria: At least one lowercase letter, one uppercase letter, one digit, one special character (@$!%?&), consist of only allowed characters (A-Z, a-z, 0-9, @$!%?&), and have a minimum length of 8 characters.', 5000, 'error')
+                        break
+                    case 407:
+                        this.$toast.showNotification('This is not a valid email format.', 5000, 'error')
+                        break
+                }
                 this.loading = false
-                this.$toast.showNotification('Username or Email already taken.', 5000, 'error')
             });
         }
     }
