@@ -66,6 +66,46 @@ export default {
                     w.getUser().then(res => {
                         users.push(...res)
                     })
+            },
+            getContacts: async () => {
+                const request = await app.axios.get('/accounts/contacts')
+                return request.data
+            },
+            sendRequest: async (targetId) => {
+                const request = await app.axios.post(`/accounts/contacts/request/${targetId}`)
+                return request.data
+            },
+            acceptRequest: async (targetId) => {
+                const request = await app.axios.post(`/accounts/contacts/accept/${targetId}`)
+                return request.data
+            },
+            getRequest: async (rId) => {
+                const request = await app.axios.get(`/accounts/contacts/request/${rId}`)
+                return request.data
+            },
+            getRequests: async () => {
+                const request = await app.axios.get(`/accounts/contacts/requests`)
+                return request.data
+            },
+            denyRequest: async (targetId) => {
+                const request = await app.axios.post(`/accounts/contacts/deny/${targetId}`)
+                return request.data
+            },
+            removeContact: async (targetId) => {
+                const request = await app.axios.post(`/accounts/contacts/remove/${targetId}`)
+                return request.data
+            },
+            blockUser: async (targetId) => {
+
+            },
+            unblockUser: async (targetId) => {
+
+            },
+            getBlocked: async () => {
+
+            },
+            getSuggestions: async () => {
+
             }
         }
 

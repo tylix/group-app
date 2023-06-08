@@ -16,6 +16,7 @@ const router = createRouter({
         {path: '/otp', meta: {auth: false}, name: 'OTP', component: () => import('@/view/auth/OtpView.vue')},
         {path: '/account/:username', meta: {auth: true}, props: true, name: 'Account', component: () => import('@/view/account/AccountView.vue')},
         {path: '/admin' , meta: {auth: true}, name: 'Admin', component: () => import('@/view/AdminView.vue')},
+        {path: '/contacts' , meta: {auth: true}, name: 'Contacts', component: () => import('@/view/contacts/ContactView.vue')},
         /*{path: '/groups/:id', meta: {auth: true}, props: true, name: 'GroupsBy', component: () => import('@/view/groups/GroupsView.vue')},*/
     ]
 });
