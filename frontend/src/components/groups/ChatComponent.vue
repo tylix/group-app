@@ -26,9 +26,9 @@
             </div>
 
             <div class="chat__input">
-                <textarea class="chat__textarea" placeholder="Type a message" v-model="this.message"
-                    @keyup.enter.shift="this.sendMessage" />
-                <button class="chat__send" @click="this.sendMessage">Send</button>
+                <textarea class="chat__textarea" placeholder="Chat" v-model="this.message"
+                    @keyup.enter="this.sendMessage" />
+                <i class="chat__send bx bx-send" @click="this.sendMessage" />
             </div>
         </div>
     </div>
@@ -60,9 +60,9 @@
                 </div>
             </div>
             <div class="chat__input">
-                <textarea class="chat__textarea" placeholder="Type a message" v-model="this.message"
-                    @keyup.enter.shift="this.sendMessage" />
-                <button class="chat__send" @click="this.sendMessage">Send</button>
+                <textarea class="chat__textarea" placeholder="Chat" v-model="this.message"
+                    @keyup.enter="this.sendMessage" />
+                <i class="chat__send bx bx-send" @click="this.sendMessage" />
             </div>
         </div>
     </div>
@@ -306,7 +306,7 @@ export default {
 }
 
 .chat__textarea {
-    width: 80%;
+    width: 90%;
     height: 70%;
     border: none;
     outline: none;
@@ -318,7 +318,16 @@ export default {
     background-color: var(--color-background);
 }
 
-.chat__send {}
+.chat__send {
+    font-size: 21px;
+    background-color: var(--color-background-modern-mute);
+    border-radius: 50%;
+    padding: 7px;
+}
+
+.chat__send:hover {
+    cursor: pointer;
+}
 
 .chat__textarea {
     background-color: var(--color-background-modern-mute);

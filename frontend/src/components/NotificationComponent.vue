@@ -1,27 +1,28 @@
 <template>
-    <p @click="this.showNotifications = !this.showNotifications" class="bell__number"
-        v-if="this.getUnreadNotifications() > 0">{{ this.getUnreadNotifications() }}</p>
-        <div class="notifications" v-if="this.show">
-    <div class="notify__body" v-if="this.show">
-        <p class="read__all" @click="this.readAll()">Read all</p>
-        <i v-if="!this.notifications" class="loader bx bx-loader-alt bx-spin" />
-        <div class="notifications" v-else>
-            <div class="notification" v-for="(notification, index) in this.notifications" :key="index">
-                <div class="notify__title" @click="this.read(notification)">
-                    <i v-if="!notification.read" class="bx bxs-circle"></i>
-                    <p>{{ notification.title }}</p>
-                    <p class="notify__timestamp">{{ this.$groups.time_ago(notification.timestamp) }}</p>
+    <div class="bell__number" v-if="this.getUnreadNotifications() > 0">
+        <p @click="this.showNotifications = !this.showNotifications">{{ this.getUnreadNotifications() }}</p>
+    </div>
+    <div class="notifications" v-if="this.show">
+        <div class="notify__body" v-if="this.show">
+            <p class="read__all" @click="this.readAll()">Read all</p>
+            <i v-if="!this.notifications" class="loader bx bx-loader-alt bx-spin" />
+            <div class="notifications" v-else>
+                <div class="notification" v-for="(notification, index) in this.notifications" :key="index">
+                    <div class="notify__title" @click="this.read(notification)">
+                        <i v-if="!notification.read" class="bx bxs-circle"></i>
+                        <p>{{ notification.title }}</p>
+                        <p class="notify__timestamp">{{ this.$groups.time_ago(notification.timestamp) }}</p>
+                    </div>
+                    <div :class="this.selectedNotification === notification.id ? 'notify__body' : 'notify__body__c'">
+                        {{ notification.body }}
+                        <button v-if="notification.link"
+                            @click="this.$router.push(notification.link.split('.com/')[1])">View</button>
+                    </div>
+                    <hr v-if="index !== this.notifications.length - 1" />
                 </div>
-                <div :class="this.selectedNotification === notification.id ? 'notify__body' : 'notify__body__c'">
-                    {{ notification.body }}
-                    <button v-if="notification.link"
-                        @click="this.$router.push(notification.link.split('.com/')[1])">View</button>
-                </div>
-                <hr v-if="index !== this.notifications.length - 1" />
             </div>
         </div>
     </div>
-        </div>
 </template>
 
 <script>
@@ -60,7 +61,7 @@ export default {
                 })
         },
         getUnreadNotifications() {
-            if(!this.notifications) return 0
+            if (!this.notifications) return 0
             const length = this.notifications.filter(n => n.read === false).length;
             return length;
         }
@@ -169,5 +170,25 @@ export default {
     margin-bottom: 10px;
     cursor: pointer;
     position: fixed;
+}
+
+.bell__number {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background-color: var(--color-red);
+    color: var(--color-text);
+    border-radius: 50%;
+    font-size: 15px;
+    height: 18px;
+    width: 18px;
+}
+
+.bell__number p {
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+    position: absolute;
+    font-weight: bold;
 }
 </style>

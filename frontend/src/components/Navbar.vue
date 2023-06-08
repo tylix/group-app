@@ -265,20 +265,6 @@ export default {
     font-weight: bold;
     margin-bottom: 5px;
 }
-
-.bell__number {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background-color: var(--color-red);
-    color: var(--color-text);
-    font-size: 12px;
-    padding: 2px 5px;
-    border-radius: 50%;
-    font-weight: bold;
-    height: 20px;
-}
-
 .notification__component {
     width: 300px;
     height: 400px;
