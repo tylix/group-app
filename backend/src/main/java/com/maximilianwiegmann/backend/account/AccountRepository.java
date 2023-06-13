@@ -22,4 +22,7 @@ public interface AccountRepository extends MongoRepository<AccountData, String>,
     @Query("{ $or: [ { 'username': { $regex: '?0', $options: 'i' } }, { 'firstName': { $regex: '?0', $options: 'i' } } ] }")
     Stream<AccountData> findAllByUsernameContains(String username);
 
+    @Query("{ 'contactRequests' : { $elemMatch: { 'targetUId' : ?0 } } }")
+    List<AccountData> findByContactRequest(String uId);
+
 }

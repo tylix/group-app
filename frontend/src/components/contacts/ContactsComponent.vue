@@ -1,8 +1,11 @@
 <template>
     <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
     <div class="contact__list" v-else>
-        <input class="search__contact" placeholder="Search in contacts" @input="this.isTyping = true"
-            v-model="this.searchQuery">
+        <div class="contacts__search__bar">
+            <input class="search__contact" placeholder="Search/Add contact" @input="this.isTyping = true"
+                v-model="this.searchQuery">
+            <i class="search__icon bx bx-search" />
+        </div>
 
         <p class="contacts__amount">Contacts - {{ this.contactUsers.length }}</p>
         <div class="contacts__contacts">
@@ -18,12 +21,14 @@
                     <hr v-if="index < this.contactUsers.length - 1" />
                 </div>
             </div>
-            <div class="search__results">
-                <i v-if="this.isLoading" class="search__member__load bx bx-loader-alt bx-spin" />
+        </div>
+        <div class="search__results">
+            <p class="search__amount" v-if="this.searchResult && this.searchResult.length > 0">Not in your contacts - {{ this.searchResult.length }}</p>
+            <i v-if="this.isLoading" class="search__member__load bx bx-loader-alt bx-spin" />
 
-                <div class="search__result" v-for="(result, index) in this.searchResult">
-                    <UsernameComponent :user="result" show-avatar />
-                </div>
+            <div class="search__result" v-for="(result, index) in this.searchResult">
+                <UsernameComponent :user="result" show-avatar />
+                <i class="search__right bx bx-user-plus" @click="this.request(result)" />
             </div>
         </div>
     </div>
@@ -98,6 +103,14 @@ export default {
             }).catch(() => {
                 this.$toast.showNotification('An error occurred while removing the contact.', 2500, 'error')
             })
+        },
+        request(user) {
+            this.$users.sendRequest(user.uid).then(res => {
+                this.$toast.showNotification(`${user.username} has received your request.`)
+                this.$emit('update')
+            }).catch(() => {
+                this.$toast.showNotification('An error occurred while adding the contact.', 2500, 'error')
+            })
         }
     },
     watch: {
@@ -120,7 +133,7 @@ export default {
 }
 
 .contacts__contacts {
-    margin-top: 55px;
+    margin-top: 80px;
 }
 
 .contact__contact {
@@ -152,19 +165,35 @@ export default {
     height: 25px;
     width: 94%;
     position: absolute;
-    left: 50%;
-    transform: translate(-50%, -50%);
     background-color: var(--color-background-modern);
     border: 1px solid var(--color-background-mute);
     border-radius: 5px;
     padding: 20px;
+    padding-left: 40px;
     font-size: 18px;
-    text-align: center;
-    color: var(--color-text);
+    color: white;
+}
+
+.search__contact::placeholder {
+    color: var(--color-text-muted)
+}
+
+.search__icon {
+    position: absolute;
+    font-size: 20px;
+    padding-left: 13px;
+}
+
+.contacts__search__bar {
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 .contacts__amount {
-    margin-top: 28px;
+    margin-top: 35px;
     position: absolute;
     font-size: 13px;
     font-weight: bold;
@@ -173,5 +202,32 @@ export default {
 .contact__contact__loop hr {
     margin-top: 15px;
     border: 1px solid var(--color-background-soft);
+}
+
+.search__results {
+    margin-top: 5%;
+}
+
+.search__result {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    margin-top: 15px;
+}
+
+.search__amount {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.search__right {
+    margin-left: auto;
+    font-size: 25px;
+}
+
+.search__right:hover {
+    cursor: pointer;
+    color: var(--color-green);
+    transition: 0.3s all ease-in-out;
 }
 </style>

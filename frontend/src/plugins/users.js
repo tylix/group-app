@@ -95,6 +95,10 @@ export default {
                 const request = await app.axios.post(`/accounts/contacts/remove/${targetId}`)
                 return request.data
             },
+            getRequested: async () => {
+                const request = await app.axios.get(`/accounts/contacts/requested`)
+                return request.data
+            },
             blockUser: async (targetId) => {
 
             },

@@ -11,6 +11,7 @@ import com.maximilianwiegmann.backend.account.AccountRepository;
 import com.maximilianwiegmann.backend.account.AccountService;
 import com.maximilianwiegmann.backend.notifications.Notification;
 import com.maximilianwiegmann.backend.notifications.NotificationHandler;
+import com.maximilianwiegmann.backend.payload.response.PublicAccountResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,17 +30,29 @@ public class ContactService {
         return account.getContactRequests();
     }
 
+    public List<PublicAccountResponse> getRequested(AccountData account) {
+        return accountRepository.findByContactRequest(account.getId()).stream()
+                .map(data -> PublicAccountResponse.builder()
+                        .username(data.getUsername()).firstName(data.getFirstName()).lastName(data.getLastName())
+                        .avatar(data.getAvatar()).status(notificationHandler.getStatus(data.getId())).build())
+                .toList();
+    }
+
     public ContactData sendRequest(AccountData account, String targetUId) {
         AccountData targetAccount = accountRepository.findById(targetUId).orElse(null);
         if (targetAccount == null)
             return null;
+        if (account.getContacts().stream().anyMatch(contact -> contact.getTargetUId().equals(targetUId)))
+            return null;
 
-        if (targetAccount.getContactRequests().stream().anyMatch(request -> request.getTargetUId().equals(account.getId())))
+        if (targetAccount.getContactRequests().stream()
+                .anyMatch(request -> request.getTargetUId().equals(account.getId())))
             return null;
         if (account.getContactRequests().stream().anyMatch(request -> request.getTargetUId().equals(targetUId)))
             return acceptRequest(account, targetUId);
 
-        ContactData request = ContactData.builder().id(BackendApplication.generateString(20)).targetUId(account.getId()).build();
+        ContactData request = ContactData.builder().id(BackendApplication.generateString(20)).targetUId(account.getId())
+                .build();
         targetAccount.getContactRequests().add(request);
         accountRepository.save(targetAccount);
 
@@ -77,7 +90,7 @@ public class ContactService {
 
         if (account.getContactRequests().stream().noneMatch(contact -> contact.getTargetUId().equals(targetUId)))
             return false;
-            
+
         account.getContactRequests().removeIf(contact -> contact.getTargetUId().equals(targetUId));
         accountRepository.save(account);
         return true;

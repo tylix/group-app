@@ -1,7 +1,10 @@
 <template>
     <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
     <div class="requests" v-else>
-        <input class="search__contact" placeholder="Search in requests">
+        <div class="contacts__search__bar">
+            <input class="search__contact" placeholder="Search request">
+            <i class="search__icon bx bx-search" />
+        </div>
 
         <p class="requests__amount">Requests - {{ this.requests.length }}</p>
         <div class="request__body">
@@ -16,6 +19,18 @@
                     </div>
                 </div>
                 <hr v-if="index < this.requestUsers.length - 1" />
+            </div>
+            <div class="pending__requests" v-if="this.requestedUsers.length > 0">
+                <p class="requested__amount">Requested - {{ this.requestedUsers.length }}</p>
+                <div class="pending__request" v-for="(item, index) in this.requestedUsers" :key="index">
+                    <div class="pending__left">
+                        <UsernameComponent :user="item" show-avatar />
+                        <p class="pending__text">Pending request...</p>
+                    </div>
+                    <div class="pending__right">
+                        <i class="bx bx-user-minus" />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -37,6 +52,7 @@ export default {
     data() {
         return {
             requestUsers: [],
+            requestedUsers: [],
             loading: true
         }
     },
@@ -54,6 +70,8 @@ export default {
                     if (this.requestUsers.length === this.requests.length) this.loading = false
                 })
             })
+
+            this.loadRequested()
 
             if (this.requests.length === 0) this.loading = false
         },
@@ -73,6 +91,12 @@ export default {
                 this.$emit('update')
             }).catch(() => {
                 this.$toast.showNotification('An error occurred while accepting the request.', 2500, 'error')
+            })
+        },
+        loadRequested() {
+            this.$users.getRequested().then(res => {
+                this.requestedUsers = res
+                console.log(this.requestedUsers)
             })
         }
     }
@@ -108,7 +132,7 @@ export default {
 .request__icons {
     display: flex;
     gap: 10px;
-    font-size: 23px;
+    font-size: 25px;
 }
 
 .request__icons i {
@@ -116,7 +140,7 @@ export default {
 }
 
 .requests__amount {
-    margin-top: 28px;
+    margin-top: 35px;
     position: absolute;
     font-size: 13px;
     font-weight: bold;
@@ -130,5 +154,40 @@ export default {
 .request__deny:hover {
     color: var(--color-red);
     transition: 0.3s all ease-in-out;
+}
+
+.pending__requests {
+    position: absolute;
+    margin-top: 5%;
+    width: 100%;
+}
+
+.pending__request {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+}
+
+.pending__right {
+    margin-left: auto;
+    font-size: 25px;
+}
+
+.pending__right:hover {
+    cursor: pointer;
+}
+
+.pending__text {
+    font-size: 12px;
+    left: 40px;
+    bottom: 5px;
+    color: var(--color-text-muted);
+    opacity: 70%;
+}
+
+.requested__amount {
+    font-size: 13px;
+    font-weight: bold;
 }
 </style>
