@@ -6,11 +6,15 @@
             <i v-if="this.onlineStatus" class="member__dot" :style="{
                 backgroundColor: this.status === 0 ? 'var(--color-red)' : 'var(--color-green)'
             }" />
-            <p v-if="this.showName">{{ this.fullName ? this.user.firstName + ' ' + this.user.lastName :
-                this.user.username }}</p>
+            <div class="username__username">
+                <i v-if="this.icon" :class="`bx bx-${this.icon.name}`"
+                    :style="this.icon.color ? { color: this.icon.color } : {}" />
+                <p v-if="this.showName">{{ this.fullName ? this.user.firstName + ' ' + this.user.lastName :
+                    this.user.username }}</p>
+            </div>
         </div>
         <div v-if="this.hover" class="username-hover">
-            <component v-if="this.customCard" :is="this.customCard" :user="this.user" />
+            <component v-if="this.customCard" :is="this.customCard" :user="this.user" :member-data="this.memberData" />
             <div v-else class="user__header">
                 <img alt="avatar"
                     :src="this.user.avatar ? 'data:image/jpeg;base64, ' + this.user.avatar : '/default.png'" />
@@ -55,6 +59,14 @@ export default {
         customCard: {
             type: Object,
             default: undefined
+        },
+        icon: {
+            type: Object,
+            required: false
+        },
+        memberData: {
+            type: Object,
+            required: false
         }
     },
     data() {
@@ -91,7 +103,7 @@ export default {
     beforeDestroy() {
         clearInterval(this.interval)
     }
-    
+
 }
 </script>
 
@@ -108,7 +120,7 @@ export default {
     width: 300px;
     height: auto;
     cursor: default;
-    z-index: 100;
+    z-index: 1000;
     display: flex;
     padding: 20px 20px;
 }
@@ -149,9 +161,16 @@ export default {
     display: inline-block;
     width: 10px;
     height: 10px;
-    box-shadow: 0 0 0 3px var(--color-background-modern);
+    box-shadow: 0 0 0 4px var(--color-background-modern);
     border-radius: 90%;
     position: absolute;
-    margin: 24px 0 0 20px;
+    margin-left: 55%;
+    margin-top: 55%;
+}
+
+.username__username {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 </style>

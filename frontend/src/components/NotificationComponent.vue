@@ -51,7 +51,7 @@ export default {
         },
 
         read(notification) {
-            this.selectedNotification ? this.selectedNotification = undefined : this.selectedNotification = notification.id
+            this?.selectedNotification === notification.id ? this.selectedNotification = undefined : this.selectedNotification = notification.id
             if (!notification.read)
                 this.$users.readNotification(notification.id).then(res => {
                     this.notifications = res.body

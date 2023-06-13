@@ -6,25 +6,32 @@
         </div>
         <div class="member__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
-            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" />
+            <UsernameComponent v-for="member in this.getMember()" :user="member" show-avatar :show-name="false" />
         </div>
     </div>
     <div class="expanded" v-else-if="this.expanded">
         <div class="emember__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
-            <UsernameComponent v-for="member in this.member" :user="member" show-avatar direction="column"
-                :custom-card="this.customCardComponent" online-status />
+            <UsernameComponent v-for="member in this.getMember()" :user="member" show-avatar direction="column"
+                :custom-card="this.customCardComponent" online-status
+                :member-data="this.member.find(mem => mem.account === member).member" :icon="
+                    this.$groups.getGroupRole(this.group, member.uid) === 0 ?
+                        { name: 'crown', description: 'Group Owner', color: '#b8860b' } :
+                        this.$groups.getGroupRole(this.group, member.uid) === -1 ?
+                            { name: 'crown', description: 'Group Admin', color: '#cd7f32' } :
+                            {}" />
         </div>
         <div class="member__right__side">
             <div class="member__invited">
                 <div class="invited__header">
                     <h3>Invited</h3>
-                    <i v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0" @click="this.searchMember = !this.searchMember"
+                    <i v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0"
+                        @click="this.searchMember = !this.searchMember"
                         :class="'search__btn bx bx-' + (this.searchMember ? 'minus' : 'plus')" />
                 </div>
                 <div :class="this.searchMember ? 'invited__body__s' : 'invited__body'">
                     <div v-if="this.searchMember">
-                        <SearchMember :group="this.group" :member="this.member" />
+                        <SearchMember :group="this.group" :member="this.getMember()" />
                     </div>
                     <div v-else>
                         <i v-if="this.loadingInvited" class="bx bx-loader-alt bx-spin" />
@@ -68,16 +75,18 @@
     <div class="collapsed" v-else>
         <div class="member__header">
             <h3 class="member__title">Member</h3>
-            <i v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0" @click="this.searchMember = !this.searchMember"
+            <i v-if="this.$groups.getGroupRole(this.group, this.getUser().uid) <= 0"
+                @click="this.searchMember = !this.searchMember"
                 :class="'search__btn bx bx-' + (this.searchMember ? 'minus' : 'plus')" />
         </div>
         <div :class="[searchMember ? 'search__member' : 'n__search__member']">
-            <SearchMember :group="this.group" :member="this.member" />
+            <SearchMember :group="this.group" :member="this.getMember()" />
         </div>
         <hr class="search__hr" />
         <div class="member__list">
             <i v-if="this.loading" class="bx bx-loader-alt bx-spin" />
-            <UsernameComponent v-for="member in this.member" :user="member" show-avatar :show-name="false" online-status />
+            <UsernameComponent v-for="member in this.getMember()" :user="member" show-avatar :show-name="false"
+                online-status />
         </div>
     </div>
 </template>
@@ -121,14 +130,24 @@ export default {
         this.loadMember()
     },
     methods: {
+        getMember() {
+            const accounts = []
+            this.member.forEach(member => {
+                accounts.push(member.account)
+            })
+            return accounts
+        },
         loadMember() {
             this.loading = true
             this.group.member.forEach(member => {
                 this.$users.getAccount(member.id).then(account => {
-                    this.member.push(account)
+                    this.member.push({ account: account, member: member })
                     if (this.member.length === this.group.member.length) {
                         this.loading = false
                         this.loadInvitedMember()
+                        this.member.sort((a, b) => {
+                            return a.member.timestamp - b.member.timestamp
+                        })
                     }
                 })
             })
@@ -287,6 +306,7 @@ export default {
     left: 20px;
     width: 66%;
     z-index: 100;
+    gap: 13px;
 }
 
 .emember__list img {
